@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MY PROMPT CLOSET v3</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#f3f1ee;color:#242424;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
+.app{max-width:780px;margin:auto}
+h1{margin:4px 0 2px;letter-spacing:2px;font-size:28px}
+.sub{color:#777;margin-bottom:14px}
+section{background:#fff;border:1px solid #ddd;border-radius:16px;padding:16px;margin:10px 0}
+h2{font-size:13px;letter-spacing:2px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+button{border:1px solid #ccc;background:#fafafa;border-radius:10px;padding:11px 8px;font-size:14px;cursor:pointer}
+button.active{background:#222;color:#fff;border-color:#222}
+.selected{display:flex;flex-wrap:wrap;gap:7px;min-height:34px}
+.chip{background:#eee;border-radius:999px;padding:7px 10px;font-size:13px}
+.empty{color:#999;font-size:13px}
+.output{background:#1e1e1e;color:#eee;border-radius:14px;padding:15px;min-height:80px;white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.65}
+.actions{display:flex;gap:8px;margin-top:10px}
+.actions button{flex:1;background:#222;color:#fff;border-color:#222}
+.note{font-size:12px;color:#888;margin-top:9px;line-height:1.5}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>MY PROMPT CLOSET</h1>
+<div class="sub">自分用・画像生成プロンプトメーカー 🧷</div>
+
+<section>
+<h2>SELECTED｜選択中</h2>
+<div id="selected" class="selected"><span class="empty">まだ何も選択されていません。</span></div>
+</section>
+<section>
+<h2>YOUR PROMPT｜生成プロンプト</h2>
+<div id="output" class="output">ここに英語プロンプトが表示されます。</div>
+<div class="actions">
+<button id="copy">英語プロンプトをコピー</button>
+<button id="clear">全部クリア</button>
+</div>
+<div class="note">ボタンと選択内容は日本語。生成・コピーするプロンプトだけ英語です。<br>同じカテゴリーから複数選択できます。</div>
+</section>
+<section>
+<h2>STYLE｜系統</h2>
+<div class="grid">
+<button data-group="style" data-ja="ゴシック・アリストクラット" data-value="gothic aristocrat fashion">ゴシック・アリストクラット</button>
+<button data-group="style" data-ja="ゴシック・ダンディ" data-value="gothic dandy fashion">ゴシック・ダンディ</button>
+<button data-group="style" data-ja="パンク" data-value="punk fashion">パンク</button>
+<button data-group="style" data-ja="ヴィクトリアン" data-value="Victorian fashion">ヴィクトリアン</button>
+<button data-group="style" data-ja="ミリタリー" data-value="military-inspired fashion">ミリタリー</button>
+<button data-group="style" data-ja="ダーク・ロマンティック" data-value="dark romantic fashion">ダーク・ロマンティック</button>
+</div></section>
+
+<section>
+<h2>OUTFIT｜服装</h2>
+<div class="grid">
+<button data-group="outfit" data-ja="テーラード・セットアップ" data-value="tailored setup">テーラード・セットアップ</button>
+<button data-group="outfit" data-ja="ダブルブレスト・セットアップ" data-value="double-breasted setup">ダブルブレスト・セットアップ</button>
+<button data-group="outfit" data-ja="オーバーサイズ・セットアップ" data-value="oversized setup">オーバーサイズ・セットアップ</button>
+<button data-group="outfit" data-ja="モノクロ・セットアップ" data-value="monochrome setup">モノクロ・セットアップ</button>
+<button data-group="outfit" data-ja="ハイネックシャツ" data-value="high-collar shirt">ハイネックシャツ</button>
+<button data-group="outfit" data-ja="フリルシャツ" data-value="ruffled shirt">フリルシャツ</button>
+<button data-group="outfit" data-ja="ジャボ" data-value="jabot">ジャボ</button>
+<button data-group="outfit" data-ja="装飾的なウエストコート" data-value="ornate waistcoat">装飾的なウエストコート</button>
+<button data-group="outfit" data-ja="フィットしたテールコート" data-value="fitted tailcoat">フィットしたテールコート</button>
+<button data-group="outfit" data-ja="テーラードジャケット" data-value="tailored jacket">テーラードジャケット</button>
+<button data-group="outfit" data-ja="ロングコート" data-value="long elegant coat">ロングコート</button>
+<button data-group="outfit" data-ja="レザージャケット" data-value="leather jacket">レザージャケット</button>
+</div></section>
+
+<section>
+<h2>DETAILS｜装飾</h2>
+<div class="grid">
+<button data-group="details" data-ja="装飾ボタン" data-value="ornate buttons">装飾ボタン</button>
+<button data-group="details" data-ja="シルバーチェーン" data-value="silver chains">シルバーチェーン</button>
+<button data-group="details" data-ja="繊細な刺繍" data-value="intricate embroidery">繊細な刺繍</button>
+<button data-group="details" data-ja="レース装飾" data-value="lace details">レース装飾</button>
+<button data-group="details" data-ja="装飾的なアクセサリー" data-value="ornate accessories">装飾的なアクセサリー</button>
+<button data-group="details" data-ja="宝石アクセサリー" data-value="jewel accessories">宝石アクセサリー</button>
+<button data-group="details" data-ja="レザーベルト" data-value="leather belt">レザーベルト</button>
+<button data-group="details" data-ja="チェーンアクセサリー" data-value="chain accessories">チェーンアクセサリー</button>
+</div></section>
+
+<section>
+<h2>POSE｜ポーズ</h2>
+<div class="grid">
+<button data-group="pose" data-ja="自然で動きのあるポーズ" data-value="natural dynamic pose">自然で動きのあるポーズ</button>
+<button data-group="pose" data-ja="表情豊かなジェスチャー" data-value="expressive gesture">表情豊かなジェスチャー</button>
+<button data-group="pose" data-ja="自然な身体の動き" data-value="natural body movement">自然な身体の動き</button>
+<button data-group="pose" data-ja="リラックスした姿勢" data-value="relaxed posture">リラックスした姿勢</button>
+<button data-group="pose" data-ja="動きのある構図" data-value="sense of motion">動きのある構図</button>
+<button data-group="pose" data-ja="床に座る" data-value="sitting on the floor">床に座る</button>
+<button data-group="pose" data-ja="片膝を立てる" data-value="one knee raised">片膝を立てる</button>
+<button data-group="pose" data-ja="壁にもたれる" data-value="leaning against a wall">壁にもたれる</button>
+<button data-group="pose" data-ja="歩いている" data-value="walking">歩いている</button>
+<button data-group="pose" data-ja="振り向く" data-value="looking over the shoulder">振り向く</button>
+<button data-group="pose" data-ja="ポケットに手を入れる" data-value="hands in pockets">ポケットに手を入れる</button>
+<button data-group="pose" data-ja="腕を組む" data-value="arms crossed">腕を組む</button>
+</div></section>
+
+<section>
+<h2>EXPRESSION｜表情</h2>
+<div class="grid">
+<button data-group="expression" data-ja="柔らかな微笑み" data-value="soft smile">柔らかな微笑み</button>
+<button data-group="expression" data-ja="控えめな微笑み" data-value="subtle smile">控えめな微笑み</button>
+<button data-group="expression" data-ja="無表情" data-value="neutral expression">無表情</button>
+<button data-group="expression" data-ja="気だるげな表情" data-value="aloof expression">気だるげな表情</button>
+<button data-group="expression" data-ja="少し疲れた表情" data-value="slightly tired expression">少し疲れた表情</button>
+<button data-group="expression" data-ja="自信のある表情" data-value="confident expression">自信のある表情</button>
+<button data-group="expression" data-ja="真剣な表情" data-value="serious expression">真剣な表情</button>
+<button data-group="expression" data-ja="いたずらっぽい表情" data-value="playful expression">いたずらっぽい表情</button>
+</div></section>
+
+<section>
+<h2>BACKGROUND｜背景</h2>
+<div class="grid">
+<button data-group="background" data-ja="雰囲気に合う背景" data-value="suitable background">雰囲気に合う背景</button>
+<button data-group="background" data-ja="自然な背景" data-value="natural background">自然な背景</button>
+<button data-group="background" data-ja="人物に合った環境" data-value="fitting environment">人物に合った環境</button>
+<button data-group="background" data-ja="暗く上品な室内" data-value="dark elegant interior">暗く上品な室内</button>
+<button data-group="background" data-ja="ヴィクトリアン調の室内" data-value="Victorian interior">ヴィクトリアン調の室内</button>
+<button data-group="background" data-ja="夜の都会の街並み" data-value="urban night street">夜の都会の街並み</button>
+<button data-group="background" data-ja="ドラマチックで雰囲気のある背景" data-value="dramatic atmospheric background">ドラマチックで雰囲気のある背景</button>
+<button data-group="background" data-ja="シンプルな背景" data-value="minimal background">シンプルな背景</button>
+</div></section>
+
+
+
+
+</div>
+
+<script>
+const selected = {};
+const buttons = document.querySelectorAll("button[data-group]");
+
+function toggleButton(btn) {
+  const group = btn.dataset.group;
+  const value = btn.dataset.value;
+  const ja = btn.dataset.ja;
+
+  if (!selected[group]) selected[group] = [];
+  const index = selected[group].findIndex(item => item.value === value);
+
+  if (index === -1) {
+    selected[group].push({ value: value, ja: ja });
+    btn.classList.add("active");
+  } else {
+    selected[group].splice(index, 1);
+    btn.classList.remove("active");
+  }
+  update();
+}
+
+buttons.forEach(function(btn) {
+  btn.onclick = function() {
+    toggleButton(btn);
+  };
+});
+
+function update() {
+  const order = ["style","outfit","details","pose","expression","background"];
+  const all = [];
+
+  order.forEach(function(group) {
+    (selected[group] || []).forEach(function(item) {
+      all.push(item);
+    });
+  });
+
+  const selectedBox = document.getElementById("selected");
+  const output = document.getElementById("output");
+
+  if (all.length === 0) {
+    selectedBox.innerHTML = '<span class="empty">まだ何も選択されていません。</span>';
+    output.textContent = "ここに英語プロンプトが表示されます。";
+    return;
+  }
+
+  selectedBox.innerHTML = "";
+  all.forEach(function(item) {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = item.ja;
+    selectedBox.appendChild(chip);
+  });
+
+  output.textContent = all.map(function(item) {
+    return item.value;
+  }).join(", ");
+}
+
+document.getElementById("copy").onclick = async function() {
+  const text = document.getElementById("output").textContent;
+  if (!text || text.indexOf("ここに") === 0) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  }
+
+  const btn = document.getElementById("copy");
+  btn.textContent = "コピーしました ✓";
+  setTimeout(function() {
+    btn.textContent = "英語プロンプトをコピー";
+  }, 1300);
+};
+
+document.getElementById("clear").onclick = function() {
+  buttons.forEach(function(btn) {
+    btn.classList.remove("active");
+  });
+  Object.keys(selected).forEach(function(group) {
+    selected[group] = [];
+  });
+  update();
+};
+
+update();
+</script>
+</body>
+</html>
