@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt Closet</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f3f5;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
+main{max-width:900px;margin:auto;padding:18px}.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #0000000d}
+h1{margin:0 0 4px;font-size:25px}h2{font-size:17px;margin:0 0 11px}.sub{font-size:13px;color:#666}
+input,textarea{width:100%;padding:11px;border:1px solid #d5d5d8;border-radius:10px;font-size:16px;background:#fff}
+.grid{display:flex;flex-wrap:wrap;gap:8px}.btn,.style{padding:9px 12px;border:1px solid #d7d7da;border-radius:10px;background:#fff;font-size:14px}.btn.on,.style.on{background:#222;color:#fff;border-color:#222}
+.stylebox{display:flex;flex-wrap:wrap;gap:8px}.style{font-weight:600}.style-elements{margin-top:12px}.muted{font-size:12px;color:#777}
+textarea{min-height:100px;font-family:ui-monospace,SFMono-Regular,monospace}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}button{cursor:pointer}
+.primary,.danger{padding:10px 14px;border-radius:10px;font-size:14px}.primary{background:#222;color:#fff;border:1px solid #222}.danger{background:#fff;border:1px solid #ccc}
+.template-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+</style></head><body><main>
+<div class="card"><h1>Prompt Closet</h1><div class="sub">服・方向性・ポーズを選んで、コピペ用プロンプトを作成</div></div>
+<div class="card"><input id="search" placeholder="登録プロンプトを検索…"></div>
+<div id="styleCard" class="card"><h2>方向性</h2><div id="styles" class="stylebox"></div><div id="styleElements" class="style-elements"></div></div>
+<div id="categories"></div>
+<div class="card"><h2>生成プロンプト</h2><textarea id="output" readonly></textarea><div class="actions"><button class="primary" onclick="copyPrompt()">コピー</button><button class="danger" onclick="clearAll()">選択をクリア</button></div></div>
+<div class="card"><h2>テンプレート保存</h2><input id="tplName" placeholder="テンプレート名"><div class="actions"><button class="primary" onclick="saveTemplate()">保存</button></div><div id="templates"></div></div>
+</main>
+<script>
+const DATA={"アウター": [["モッズコート", "fishtail parka"], ["トレンチコート", "trench coat"], ["Pコート", "pea coat"], ["MA-1", "MA-1 bomber jacket"], ["ジャケット", "jacket"], ["カーディガン", "cardigan"], ["カーディガン(ロング丈)", "long cardigan"], ["ノーカラーコート", "collarless coat"], ["ジップアップパーカー", "zip-up hoodie"]], "トップス": [["Tシャツ", "t-shirt"], ["ドロップショルダーシャツ", "drop-shoulder shirt"], ["ハイネックニット", "high-neck knit sweater"], ["ケーブル編みセーター", "cable-knit sweater"], ["プルオーバーパーカー", "pullover hoodie"], ["ボタンダウンシャツ", "button-down shirt"], ["タンクトップ", "tank top"]], "ボトムス": [["スキニーパンツ", "skinny pants"], ["カーゴパンツ", "cargo pants"], ["サルエルパンツ", "harem pants"], ["ダメージジーンズ", "distressed jeans"], ["スラックス", "slacks"]], "上下似たようなやつ": [["スーツ", "suit"], ["スリーピーススーツ", "three-piece suit"], ["ジャージ姿", "tracksuit"], ["着ぐるみ", "animal onesie"]], "和装・民族衣装": [["着物", "kimono"], ["袴", "hakama"], ["韓服", "hanbok"], ["カンフー服", "kung fu uniform"]], "小物": [["丸眼鏡", "round glasses"], ["ネクタイ", "necktie"], ["チョーカー", "choker"], ["首輪", "collar"], ["ネックレス", "necklace"], ["編み上げブーツ", "lace-up boots"], ["ギター", "guitar"], ["ケモ耳", "animal ears"], ["煙管", "kiseru pipe"], ["煙草", "cigarette"], ["ケーキ", "cake"], ["パフェ", "parfait"]], "方向性": [["ゴス(黒服)", "goth fashion"], ["スチームパンク", "steampunk fashion"], ["モード系", "avant-garde fashion"], ["ミリタリー", "military fashion"], ["サイバーパンク", "cyberpunk fashion"], ["ナード系", "nerdy fashion"], ["プレッピー", "preppy fashion"], ["聖職者風", "clerical attire"]], "ポーズ・視線": [["自然な立ちポーズ", "natural standing pose"], ["モデル立ち", "model pose"], ["自然な座りポーズ", "natural sitting pose"], ["しゃがむ", "crouching"], ["仰向けに寝転ぶ", "lying on back"], ["うつ伏せに寝転ぶ", "lying face down"], ["指ハート", "finger heart gesture"], ["中指立てる", "raising middle finger"], ["こちらを向く", "looking at viewer"], ["横を向く", "side view"], ["全身", "full body"], ["上半身", "upper body"], ["遠くを見る", "looking into the distance"], ["視線を落とす", "looking down"], ["自然な視線", "natural gaze"]]}, STYLES={"ゴス(黒服)": [["コルセット", "corset"], ["ベスト", "waistcoat"], ["ハーネス", "body harness"], ["装飾ストラップ", "decorative straps"], ["ハイカラーシャツ", "high-collar shirt"], ["ジャボ", "jabot"], ["装飾ベルト", "ornate belt"], ["チェーンアクセサリー", "chain accessories"], ["レースアップブーツ", "lace-up boots"], ["フリルシャツ", "ruffled shirt"]], "スチームパンク": [["コルセット", "corset"], ["ベスト", "waistcoat"], ["ハーネス", "body harness"], ["ゴーグル", "goggles"], ["懐中時計", "pocket watch"], ["歯車モチーフ", "gear motifs"], ["革ベルト", "leather belt"], ["装飾ボタン", "ornate buttons"], ["革手袋", "leather gloves"], ["ロングコート", "long coat"], ["テールコート", "tailcoat"], ["シルクハット", "top hat"], ["スチームパンク風アクセサリー", "steampunk accessories"]], "モード系": [["オーバーサイズジャケット", "oversized jacket"], ["ロングジャケット", "longline jacket"], ["ロングコート", "long coat"], ["ワイドパンツ", "wide-leg pants"], ["テーパードパンツ", "tapered pants"], ["アシンメトリーな服", "asymmetrical clothing"], ["ロングシャツ", "long shirt"], ["ハイネックトップス", "high-neck top"], ["タートルネック", "turtleneck"], ["ドレープトップス", "draped top"]], "ミリタリー": [["ミリタリージャケット", "military jacket"], ["フィールドジャケット", "field jacket"], ["ユーティリティベスト", "utility vest"], ["タクティカルベスト", "tactical vest"], ["ミリタリーシャツ", "military shirt"], ["カーゴパンツ", "cargo pants"], ["ミリタリーパンツ", "military trousers"], ["コンバットブーツ", "combat boots"], ["ミリタリーベルト", "military belt"], ["弾薬ポーチ", "ammunition pouches"], ["ドッグタグ", "military dog tags"], ["肩章", "shoulder epaulettes"], ["迷彩柄", "camouflage pattern"]], "サイバーパンク": [["テックウェアジャケット", "techwear jacket"], ["タクティカルベスト", "tactical vest"], ["ハーネス", "body harness"], ["ユーティリティベルト", "utility belt"], ["カーゴパンツ", "cargo pants"], ["テックウェアパンツ", "techwear pants"], ["アシンメトリーな服", "asymmetrical clothing"], ["フィンガーレスグローブ", "fingerless gloves"], ["LEDアクセサリー", "LED accessories"], ["発光ライン", "glowing accents"], ["サイバーゴーグル", "cyber goggles"], ["フェイスマスク", "face mask"], ["メカニカルパーツ", "mechanical components"]], "ナード系": [["カーディガン", "cardigan"], ["ベスト", "sweater vest"], ["チェックシャツ", "plaid shirt"], ["ボタンダウンシャツ", "button-down shirt"], ["ハイネックニット", "high-neck knit sweater"], ["セーター", "sweater"], ["サスペンダー", "suspenders"], ["蝶ネクタイ", "bow tie"], ["丸眼鏡", "round glasses"], ["チノパン", "chinos"], ["ローファー", "loafers"]], "プレッピー": [["ブレザー", "blazer"], ["スクールブレザー", "school blazer"], ["ニットベスト", "sweater vest"], ["カーディガン", "cardigan"], ["ポロシャツ", "polo shirt"], ["ボタンダウンシャツ", "button-down shirt"], ["ネクタイ", "necktie"], ["リボンタイ", "ribbon tie"], ["チノパン", "chinos"], ["ローファー", "loafers"]], "聖職者風": [["立襟", "clerical collar"], ["キャソック", "cassock"], ["クレリックシャツ", "clerical shirt"], ["ストール", "priest's stole"], ["サープリス", "surplice"], ["聖職者用祭服", "clerical vestments"], ["神父服", "priest's robe"], ["十字架ペンダント", "cross pendant"]]};
+let selected=new Set(), selectedStyles=new Set();
+const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+function button(jp,en){return `<button class="btn ${selected.has(en)?'on':''}" onclick="toggle('${esc(en)}')">${jp}</button>`}
+function render(){
+ const q=document.getElementById('search').value.trim().toLowerCase();
+ document.getElementById('styles').innerHTML=DATA["方向性"].filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q)).map(x=>`<button class="style ${selectedStyles.has(x[0])?'on':''}" onclick="toggleStyle('${esc(x[0])}')">${x[0]}</button>`).join('');
+ let c='';
+ for(const [cat,arr] of Object.entries(DATA)){
+   if(cat==="方向性") continue;
+   const a=arr.filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q));
+   if(!a.length) continue;
+   c+=`<div class="card"><h2>${cat}</h2><div class="grid">${a.map(x=>button(x[0],x[1])).join('')}</div></div>`;
+ }
+ document.getElementById('categories').innerHTML=c;
+ let s='';
+ for(const style of selectedStyles){
+   const a=STYLES[style].filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q));
+   s+=`<div style="margin-top:12px"><b>${style}</b><div class="muted">スタイル要素</div><div class="grid" style="margin-top:7px">${a.map(x=>button(x[0],x[1])).join('')}</div></div>`;
+ }
+ document.getElementById('styleElements').innerHTML=s;
+ update();
+}
+function toggle(en){selected.has(en)?selected.delete(en):selected.add(en);render()}
+function toggleStyle(s){
+  if(selectedStyles.has(s)){
+    selectedStyles.delete(s);
+    (STYLES[s]||[]).forEach(x=>selected.delete(x[1]));
+  }else{
+    selectedStyles.add(s);
+    (STYLES[s]||[]).forEach(x=>selected.add(x[1]));
+  }
+  render();
+}
+function update(){
+  const dc=document.getElementById('data-count'); if(dc) dc.textContent=`登録済みプロンプト ${Object.values(DATA).reduce((n,a)=>n+a.length,0)}件`;
+ const styles=[...selectedStyles].map(s=>DATA["方向性"].find(x=>x[0]===s)?.[1]).filter(Boolean);
+ document.getElementById('output').value=[...styles,...selected].join(', ');
+}
+async function copyPrompt(){await navigator.clipboard?.writeText(document.getElementById('output').value)}
+function clearAll(){selected.clear();selectedStyles.clear();render()}
+function saveTemplate(){
+ const n=document.getElementById('tplName').value.trim();if(!n)return;
+ const t=JSON.parse(localStorage.getItem('promptClosetTemplates')||'{}');
+ t[n]={styles:[...selectedStyles],items:[...selected]};localStorage.setItem('promptClosetTemplates',JSON.stringify(t));document.getElementById('tplName').value='';showTemplates();
+}
+function loadTemplate(n){const t=JSON.parse(localStorage.getItem('promptClosetTemplates')||'{}')[n];if(!t)return;selectedStyles=new Set(t.styles);selected=new Set(t.items);render()}
+function deleteTemplate(n){const t=JSON.parse(localStorage.getItem('promptClosetTemplates')||'{}');delete t[n];localStorage.setItem('promptClosetTemplates',JSON.stringify(t));showTemplates()}
+function showTemplates(){
+ const t=JSON.parse(localStorage.getItem('promptClosetTemplates')||'{}');
+ document.getElementById('templates').innerHTML=Object.keys(t).map(n=>`<div class="template-row"><span>${n}</span><span><button class="danger" onclick="loadTemplate('${esc(n)}')">読み込み</button> <button class="danger" onclick="deleteTemplate('${esc(n)}')">削除</button></span></div>`).join('')||'<div class="muted">保存したテンプレートはここに表示されます。</div>';
+}
+document.getElementById('search').addEventListener('input',render);showTemplates();render();
+</script></body></html>
