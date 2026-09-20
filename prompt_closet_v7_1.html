@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt Closet</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f3f5;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
+main{max-width:900px;margin:auto;padding:18px}.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #0000000d}
+h1{margin:0 0 4px;font-size:25px}h2{font-size:17px;margin:0 0 11px}.sub{font-size:13px;color:#666}
+input,textarea{width:100%;padding:11px;border:1px solid #d5d5d8;border-radius:10px;font-size:16px;background:#fff}
+.grid{display:flex;flex-wrap:wrap;gap:8px}.btn,.style{padding:9px 12px;border:1px solid #d7d7da;border-radius:10px;background:#fff;font-size:14px}.btn.on,.style.on{background:#222;color:#fff;border-color:#222}
+.stylebox{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.stylebox::-webkit-scrollbar{display:none}.style{font-weight:600;white-space:nowrap}.style-elements{margin-top:12px}.muted{font-size:12px;color:#777}
+textarea{min-height:100px;font-family:ui-monospace,SFMono-Regular,monospace}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}button{cursor:pointer}
+.primary,.danger{padding:10px 14px;border-radius:10px;font-size:14px}.primary{background:#222;color:#fff;border:1px solid #222}.danger{background:#fff;border:1px solid #ccc}
+.template-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}.cat-tabs{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.cat-tabs::-webkit-scrollbar{display:none}.cat-tab{flex:0 0 auto;padding:9px 12px;border:1px solid #d7d7da;border-radius:10px;background:#fff;font-size:14px;white-space:nowrap}.cat-tab.on{background:#222;color:#fff;border-color:#222}.shufflebar{display:flex;gap:8px;align-items:center;justify-content:space-between}.shuffle-note{font-size:12px;color:#777}
+
+.character-row{display:flex;gap:8px}.character-btn{padding:9px 14px;border:1px solid #d7d7da;border-radius:10px;background:#fff;font-size:14px}.character-btn.on{background:#222;color:#fff;border-color:#222}
+.accordion{display:flex;flex-direction:column;gap:8px}.acc-section{border:1px solid #e4e4e7;border-radius:12px;overflow:hidden;background:#fff}.acc-head{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:0;background:#fafafa;font-size:15px;font-weight:600;text-align:left}.acc-head.on{background:#222;color:#fff}.acc-body{padding:12px}.acc-count{font-size:12px;font-weight:400;opacity:.7;margin-left:6px}
+
+.category-menu-wrap{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;margin:0 0 10px}
+.category-menu{display:inline-flex;gap:8px;min-width:max-content}
+.category-menu button{white-space:nowrap}
+.category-panel{display:none}
+.category-panel.open{display:block}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#222;color:#fff;padding:9px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:9999;box-shadow:0 4px 14px #0002}.toast.show{opacity:1;transform:translate(-50%,0)}
+
+</style></head><body><main>
+<div class="card"><h1>Prompt Closet</h1><div class="sub">服・方向性・ポーズを選んで、コピペ用プロンプトを作成</div></div>
+<div class="card"><input id="search" placeholder="登録プロンプトを検索…"></div>
+<div class="card"><div class="shufflebar"><div><h2 style="margin-bottom:3px">おまかせコーデ</h2><div class="shuffle-note">アウター・トップス・ボトムス・小物から組み合わせ。セット服と方向性は除外。</div></div><button class="primary" onclick="shuffleOutfit()">🎲 シャッフル</button></div></div><div class="card"><h2>人物</h2><div id="characterType" class="character-row"><button class="character-btn" data-value="male" onclick="setCharacter('male')">男性</button><button class="character-btn" data-value="female" onclick="setCharacter('female')">女性</button></div></div><div id="styleCard" class="card"><h2>方向性</h2><div id="styles" class="stylebox"></div><div id="styleElements" class="style-elements"></div></div>
+<div id="categories"></div>
+<div class="card"><h2>生成プロンプト</h2><textarea id="output" readonly></textarea><div class="actions"><button class="primary" onclick="copyPrompt()">コピー</button><button class="danger" onclick="clearAll()">選択をクリア</button></div></div>
+<div class="card"><h2>テンプレート保存</h2><input id="tplName" placeholder="テンプレート名"><div class="actions"><button class="primary" onclick="saveTemplate()">保存</button></div><div id="templates"></div></div>
+</main><div id="toast" class="toast">コピーしたよ！</div>
+<script>
+const DATA={"アウター":[["モッズコート","fishtail parka"],["トレンチコート","trench coat"],["Pコート","pea coat"],["MA-1","MA-1 bomber jacket"],["ジャケット","jacket"],["カーディガン","cardigan"],["カーディガン(ロング丈)","long cardigan"],["ノーカラーコート","collarless coat"],["ジップアップパーカー","zip-up hoodie"],["ブルゾン","blouson jacket"],["デニムジャケット","denim jacket"],["ライダースジャケット","leather biker jacket"],["ダッフルコート","duffle coat"],["ロングコート","long coat"],["テーラードジャケット","tailored jacket"],["ダブルブレストジャケット","double-breasted jacket"],["クロップドジャケット","cropped jacket"],["コーデュロイジャケット","corduroy jacket"],["コーチジャケット","coach jacket"],["スタジャン","varsity jacket"],["フィールドジャケット","field jacket"],["ユーティリティジャケット","utility jacket"],["ワークジャケット","work jacket"],["カバーオール","chore jacket"],["フライトジャケット","flight jacket"],["トラックジャケット","track jacket"],["ショート丈ブルゾン","cropped blouson jacket"],["ノーカラージャケット","collarless jacket"],["チャイナジャケット","Chinese jacket"],["ミリタリーコート","military coat"],["フード付きロングコート","hooded long coat"],["ケープコート","cape coat"],["ポンチョ","poncho"],["ローブコート","robe coat"],["ダスターコート","duster coat"]],"トップス":[["Tシャツ","t-shirt"],["ドロップショルダーシャツ","drop-shoulder shirt"],["ハイネックニット","high-neck knit sweater"],["ケーブル編みセーター","cable-knit sweater"],["プルオーバーパーカー","pullover hoodie"],["ボタンダウンシャツ","button-down shirt"],["タンクトップ","tank top"],["ロンT","long-sleeve t-shirt"],["ワッフルTシャツ","waffle-knit t-shirt"],["ヘンリーネックシャツ","henley shirt"],["オープンカラーシャツ","open-collar shirt"],["ポロシャツ","polo shirt"],["スウェット","sweatshirt"],["タートルネック","turtleneck sweater"],["シャツジャケット","shirt jacket"],["スウェットベスト","sweat vest"],["ニットベスト","sweater vest"],["Vネックセーター","V-neck sweater"],["モックネックニット","mock-neck sweater"],["リブニット","ribbed knit sweater"],["モヘアニット","mohair sweater"],["フェアアイルセーター","Fair Isle sweater"],["ノルディックセーター","Nordic sweater"],["タートルネックカットソー","turtleneck shirt"],["バンドTシャツ","band t-shirt"],["プリントTシャツ","graphic t-shirt"],["ストライプシャツ","striped shirt"],["チェックシャツ","plaid shirt"],["フリルシャツ","ruffled shirt"],["ハイカラーシャツ","high-collar shirt"],["スタンドカラーシャツ","stand-collar shirt"],["ロングシャツ","long shirt"],["チュニックシャツ","tunic shirt"],["ドレープトップス","draped top"],["アシンメトリートップス","asymmetrical top"],["メッシュトップス","mesh top"],["レーストップス","lace top"],["カットソー","jersey knit top"],["ボーダーTシャツ","striped t-shirt"],["オフショルダートップス","off-shoulder top"],["ポロニット","knit polo shirt"], ["総柄シャツ","all-over patterned shirt"]],"ボトムス":[["スキニーパンツ","skinny pants"],["カーゴパンツ","cargo pants"],["サルエルパンツ","harem pants"],["ダメージジーンズ","distressed jeans"],["スラックス","slacks"],["ワイドパンツ","wide-leg pants"],["チノパン","chinos"],["ストレートジーンズ","straight-leg jeans"],["ワークパンツ","work pants"],["ショートパンツ","shorts"],["テーパードパンツ","tapered trousers"],["プリーツパンツ","pleated trousers"],["フレアパンツ","flared pants"],["ベルボトム","bell-bottom trousers"],["クロップドパンツ","cropped trousers"],["コーデュロイパンツ","corduroy trousers"],["ペインターパンツ","painter pants"],["カーペンターパンツ","carpenter pants"],["ベイカーパンツ","baker pants"],["ユーティリティパンツ","utility trousers"],["ミリタリーパンツ","military trousers"],["トラックパンツ","track pants"],["パラシュートパンツ","parachute pants"],["ジョッパーズパンツ","jodhpur pants"],["バルーンパンツ","balloon pants"],["ロールアップパンツ","rolled-up trousers"],["レザーパンツ","leather pants"],["ベルテッドパンツ","belted trousers"],["サスペンダーパンツ","suspender trousers"],["ワークショーツ","work shorts"],["バミューダショーツ","Bermuda shorts"],["キュロットパンツ","culotte pants"],["袴風ワイドパンツ","hakama-style wide-leg pants"]],"上下似たようなやつ":[["スーツ","suit"],["スリーピーススーツ","three-piece suit"],["ジャージ姿","tracksuit"],["着ぐるみ","animal onesie"],["部屋着","loungewear"],["スウェット上下","sweatshirt and sweatpants"],["ジャージ","sportswear"],["パジャマ","pajamas"],["Tシャツと短パン","t-shirt and shorts"]],"和装・民族衣装":[["着物","kimono"],["袴","hakama"],["韓服","hanbok"],["カンフー服","kung fu uniform"],["作務衣","samue"],["甚平","jinbei"],["羽織","haori"],["浴衣","yukata"],["チャイナシャツ","Chinese shirt"],["マオカラー服","Mao-collar outfit"]],"小物":[["丸眼鏡","round glasses"],["ネクタイ","necktie"],["チョーカー","choker"],["首輪","collar"],["ネックレス","necklace"],["編み上げブーツ","lace-up boots"],["ギター","guitar"],["ケモ耳","animal ears"],["煙管","kiseru pipe"],["煙草","cigarette"],["ケーキ","cake"],["パフェ","parfait"],["ローファー","loafers"],["革靴","leather dress shoes"],["ブーツ","boots"],["コンバットブーツ","combat boots"],["スニーカー","sneakers"],["ワークブーツ","work boots"],["トレッキングブーツ","hiking boots"],["サスペンダー","suspenders"],["蝶ネクタイ","bow tie"],["リボンタイ","ribbon tie"],["チェーンネックレス","chain necklace"],["チェーンアクセサリー","chain accessories"],["リング","rings"],["スタッズ","studs"],["安全ピン","safety pins"],["バングル","bangle"],["腕時計","wristwatch"],["懐中時計","pocket watch"],["ゴーグル","goggles"],["キャップ","cap"],["ニット帽","beanie"],["ハンチング帽","flat cap"],["ベレー帽","beret"],["シルクハット","top hat"],["革手袋","leather gloves"],["フィンガーレスグローブ","fingerless gloves"],["マフラー","scarf"],["革ベルト","leather belt"],["装飾ベルト","ornate belt"],["ハーネス","body harness"],["ユーティリティベルト","utility belt"],["革鞄","leather satchel"],["バックパック","backpack"],["ショルダーバッグ","shoulder bag"],["メッセンジャーバッグ","messenger bag"],["トートバッグ","tote bag"],["傘","umbrella"],["杖","cane"],["装飾的なステッキ","ornate cane"]],"ポーズ・視線":[["自然な立ちポーズ","natural standing pose"],["モデル立ち","model pose"],["自然な座りポーズ","natural sitting pose"],["しゃがむ","crouching"],["仰向けに寝転ぶ","lying on back"],["うつ伏せに寝転ぶ","lying face down"],["指ハート","finger heart gesture"],["中指立てる","raising middle finger"],["こちらを向く","looking at viewer"],["横を向く","side view"],["全身","full body"],["上半身","upper body"],["遠くを見る","looking into the distance"],["視線を落とす","looking down"],["自然な視線","natural gaze"],["壁にもたれる","leaning against a wall"],["椅子に深く座る","sitting deep in a chair"],["腕を組む","crossed arms"],["振り返る","looking back"],["片手をポケットに入れる","one hand in pocket"]],"表情・態度":[["いーっと歯を見せて舌を出す","grimacing with teeth bared, sticking out tongue"],["半笑いで見下す","smirking condescendingly"],["ふてくされた顔","sulky expression"],["気だるげな表情","bored expression"],["眠そうに睨む","sleepy glare"],["呆れた顔","exasperated expression"],["露骨に嫌そうな顔","openly disgusted expression"],["得意げな表情","smug expression"],["面倒くさそうな表情","annoyed, looking bothered"],["警戒した表情","wary expression"],["怪訝そうに眉をひそめる","furrowing brows suspiciously"],["ニヤついた表情","mischievous-looking grin"],["引きつった笑顔","strained smile"],["何か言いたげな表情","an expression as if about to say something"],["鼻で笑う","snorting with amusement"],["不機嫌そうにそっぽを向く","turning away with an annoyed expression"],["余裕ぶった表情","self-assured expression"],["挑発的な表情","provocative expression"],["無言で呆れる","silently exasperated"],["無表情で睨む","staring coldly with a blank expression"], ["微笑む","gentle smile"], ["穏やかに微笑む","soft, gentle smile"], ["楽しそうに笑う","smiling happily"]],"方向性":[["ゴス(黒服)","goth fashion"],["スチームパンク","steampunk fashion"],["モード系","avant-garde fashion"],["ミリタリー","military fashion"],["サイバーパンク","cyberpunk fashion"],["ナード系","nerdy fashion"],["プレッピー","preppy fashion"],["聖職者風","clerical attire"],["ダークアカデミア","dark academia fashion"],["ヴィクトリアン","Victorian fashion"],["パンク","punk fashion"],["ロック系","rock fashion"],["ワークウェア","workwear fashion"],["アウトドア系","outdoor fashion"],["ストリート系","streetwear fashion"],["ヴィンテージ","vintage fashion"],["ディーゼルパンク","dieselpunk fashion"],["アリス風","whimsical Victorian fantasy fashion"]]}
+const STYLES={
+"ゴス(黒服)":[["コルセット","corset"],["ベスト","waistcoat"],["ハーネス","body harness"],["装飾ストラップ","decorative straps"],["ハイカラーシャツ","high-collar shirt"],["ジャボ","jabot"],["装飾ベルト","ornate belt"],["チェーンアクセサリー","chain accessories"],["レースアップブーツ","lace-up boots"],["フリルシャツ","ruffled shirt"]],
+"スチームパンク":[["コルセット","corset"],["ベスト","waistcoat"],["ハーネス","body harness"],["ゴーグル","goggles"],["懐中時計","pocket watch"],["歯車モチーフ","gear motifs"],["革ベルト","leather belt"],["装飾ボタン","ornate buttons"],["革手袋","leather gloves"],["ロングコート","long coat"],["テールコート","tailcoat"],["シルクハット","top hat"],["スチームパンク風アクセサリー","steampunk accessories"]],
+"モード系":[["オーバーサイズジャケット","oversized jacket"],["ロングジャケット","longline jacket"],["ロングコート","long coat"],["ワイドパンツ","wide-leg pants"],["テーパードパンツ","tapered pants"],["アシンメトリーな服","asymmetrical clothing"],["ロングシャツ","long shirt"],["ハイネックトップス","high-neck top"],["タートルネック","turtleneck"],["ドレープトップス","draped top"]],
+"ミリタリー":[["ミリタリージャケット","military jacket"],["フィールドジャケット","field jacket"],["ユーティリティベスト","utility vest"],["タクティカルベスト","tactical vest"],["ミリタリーシャツ","military shirt"],["カーゴパンツ","cargo pants"],["ミリタリーパンツ","military trousers"],["コンバットブーツ","combat boots"],["ミリタリーベルト","military belt"],["弾薬ポーチ","ammunition pouches"],["ドッグタグ","military dog tags"],["肩章","shoulder epaulettes"],["迷彩柄","camouflage pattern"]],
+"サイバーパンク":[["テックウェアジャケット","techwear jacket"],["タクティカルベスト","tactical vest"],["ハーネス","body harness"],["ユーティリティベルト","utility belt"],["カーゴパンツ","cargo pants"],["テックウェアパンツ","techwear pants"],["アシンメトリーな服","asymmetrical clothing"],["フィンガーレスグローブ","fingerless gloves"],["LEDアクセサリー","LED accessories"],["発光ライン","glowing accents"],["サイバーゴーグル","cyber goggles"],["フェイスマスク","face mask"],["メカニカルパーツ","mechanical components"]],
+"ナード系":[["カーディガン","cardigan"],["ベスト","sweater vest"],["チェックシャツ","plaid shirt"],["ボタンダウンシャツ","button-down shirt"],["ハイネックニット","high-neck knit sweater"],["セーター","sweater"],["サスペンダー","suspenders"],["蝶ネクタイ","bow tie"],["丸眼鏡","round glasses"],["チノパン","chinos"],["ローファー","loafers"]],
+"プレッピー":[["ブレザー","blazer"],["スクールブレザー","school blazer"],["ニットベスト","sweater vest"],["カーディガン","cardigan"],["ポロシャツ","polo shirt"],["ボタンダウンシャツ","button-down shirt"],["ネクタイ","necktie"],["リボンタイ","ribbon tie"],["チノパン","chinos"],["ローファー","loafers"]],
+"聖職者風":[["立襟","clerical collar"],["キャソック","cassock"],["クレリックシャツ","clerical shirt"],["ストール","priest's stole"],["サープリス","surplice"],["聖職者用祭服","clerical vestments"],["神父服","priest's robe"],["十字架ペンダント","cross pendant"]],
+"ダークアカデミア":[["ツイードジャケット","tweed jacket"],["ウールコート","wool coat"],["ニットベスト","knit vest"],["タートルネック","turtleneck sweater"],["ボタンダウンシャツ","button-down shirt"],["プリーツパンツ","pleated trousers"],["サスペンダー","suspenders"],["革靴","leather dress shoes"],["丸眼鏡","round glasses"],["革鞄","leather satchel"]],
+"ヴィクトリアン":[["テールコート","tailcoat"],["ベスト","waistcoat"],["ハイカラーシャツ","high-collar shirt"],["ジャボ","jabot"],["フロックコート","frock coat"],["懐中時計","pocket watch"],["装飾ボタン","ornate buttons"],["革手袋","leather gloves"],["シルクハット","top hat"],["装飾的なステッキ","ornate cane"]],
+"パンク":[["レザージャケット","leather jacket"],["ダメージジーンズ","distressed jeans"],["バンドTシャツ","band t-shirt"],["スタッズ","studs"],["チェーン","chains"],["安全ピン","safety pins"],["コンバットブーツ","combat boots"],["パンクアクセサリー","punk accessories"]],
+"ロック系":[["レザージャケット","leather jacket"],["バンドTシャツ","band t-shirt"],["スキニーパンツ","skinny pants"],["ダメージジーンズ","distressed jeans"],["チェーンネックレス","chain necklace"],["リング","rings"],["ブーツ","boots"],["ロック系アクセサリー","rock accessories"]],
+"ワークウェア":[["ワークジャケット","work jacket"],["カバーオール","coveralls jacket"],["ワークシャツ","work shirt"],["カーゴパンツ","cargo pants"],["ワークパンツ","work pants"],["サスペンダー","suspenders"],["ワークブーツ","work boots"],["ユーティリティベルト","utility belt"]],
+"アウトドア系":[["フリースジャケット","fleece jacket"],["マウンテンパーカー","mountain parka"],["ダウンベスト","down vest"],["カーゴパンツ","cargo pants"],["アウトドアパンツ","outdoor pants"],["トレッキングブーツ","hiking boots"],["バックパック","backpack"],["アウトドアアクセサリー","outdoor accessories"]],
+"ストリート系":[["オーバーサイズパーカー","oversized hoodie"],["ボンバージャケット","bomber jacket"],["オーバーサイズTシャツ","oversized t-shirt"],["ワイドパンツ","wide-leg pants"],["カーゴパンツ","cargo pants"],["スニーカー","sneakers"],["キャップ","cap"],["チェーンアクセサリー","chain accessories"]],
+"ヴィンテージ":[["ヴィンテージジャケット","vintage jacket"],["ヴィンテージシャツ","vintage shirt"],["カーディガン","cardigan"],["ハイウエストパンツ","high-waisted pants"],["ストレートジーンズ","straight-leg jeans"],["ローファー","loafers"],["ヴィンテージアクセサリー","vintage accessories"]],
+"ディーゼルパンク":[["レザージャケット","leather jacket"],["ミリタリーコート","military coat"],["カーゴパンツ","cargo pants"],["ハーネス","body harness"],["革ベルト","leather belt"],["ゴーグル","goggles"],["ガスマスク","gas mask"],["機械部品","mechanical parts"],["革手袋","leather gloves"]],
+"アリス風":[["懐中時計","pocket watch"],["燕尾服","tailcoat"],["ベスト","waistcoat"],["フリルシャツ","ruffled shirt"],["リボンタイ","ribbon tie"],["ストライプ柄","striped pattern"],["チェック柄","checkered pattern"],["ロングコート","long coat"],["シルクハット","top hat"],["トランプモチーフ","playing card motifs"],["時計モチーフ","clock motifs"],["ウサギモチーフ","rabbit motifs"],["懐中時計のチェーン","pocket watch chain"]]
+};
+
+let selected = new Set();
+let selectedStyles = new Set();
+let activeCategory = null;
+let characterType = null;
+
+const CHARACTER_PROMPTS = {
+  male: "1boy, solo male, adult male",
+  female: "1girl"
+};
+const BASE_PROMPT = "masterpiece, best quality, highly detailed, clean illustration, detailed face, detailed facial features, well-drawn hands, anatomically correct hands, correct anatomy, natural proportions, coherent details";
+const SHUFFLE_CATS = ["アウター", "トップス", "ボトムス", "小物"];
+const SHUFFLE_COUNTS = {"アウター":1, "トップス":1, "ボトムス":1, "小物":2};
+const esc = s => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+function button(jp,en){
+  return `<button class="btn ${selected.has(en)?"on":""}" onclick="toggle('${esc(en)}')">${jp}</button>`;
+}
+function setCharacter(type){
+  characterType=type;
+  document.querySelectorAll("#characterType .character-btn").forEach(b=>b.classList.toggle("on",b.dataset.value===type));
+  update();
+}
+let openCategory = null;
+function toggleCategory(cat){
+  openCategory = (openCategory === cat) ? null : cat;
+  render();
+}
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function shuffleOutfit(){
+  selected.clear();
+  for(const cat of SHUFFLE_CATS){
+    let pool=DATA[cat]||[];
+    if(cat==="小物") pool=pool.filter(x=>!["guitar","cake","parfait"].includes(x[1]));
+    shuffleArray(pool).slice(0,SHUFFLE_COUNTS[cat]||1).forEach(x=>selected.add(x[1]));
+  }
+  render();
+}
+function toggle(en){
+  if(selected.has(en)) selected.delete(en); else selected.add(en);
+  render();
+}
+function toggleStyle(style){
+  if(selectedStyles.has(style)){
+    selectedStyles.delete(style);
+    (STYLES[style]||[]).forEach(x=>selected.delete(x[1]));
+  }else{
+    selectedStyles.add(style);
+    (STYLES[style]||[]).forEach(x=>selected.add(x[1]));
+  }
+  render();
+}
+function render() {
+  const q = document.getElementById("search").value.trim().toLowerCase();
+
+  const styleBox=document.getElementById("styles");
+  const styleScroll=styleBox ? styleBox.scrollLeft : 0;
+  document.getElementById("styles").innerHTML = DATA["方向性"]
+    .filter(x => !q || x[0].toLowerCase().includes(q) || x[1].toLowerCase().includes(q))
+    .map(x => `<button class="style ${selectedStyles.has(x[0]) ? "on" : ""}" onclick="toggleStyle('${esc(x[0])}')">${x[0]}</button>`)
+    .join("");
+  if(styleBox)styleBox.scrollLeft=styleScroll;
+
+  const cats = Object.keys(DATA).filter(cat => cat !== "方向性");
+  const menuWrap=document.querySelector(".category-menu-wrap");
+  const menuScroll=menuWrap ? menuWrap.scrollLeft : 0;
+  const openCats = new Set(openCategory ? [openCategory] : []);
+
+  const menu = cats.map(cat =>
+    `<button class="cat-tab ${openCats.has(cat) ? "on" : ""}" data-category="${esc(cat)}" onclick="toggleCategory('${esc(cat)}')">${cat}</button>`
+  ).join("");
+  const panels = cats.map(cat => {
+    let arr = DATA[cat] || [];
+    if(q)arr=arr.filter(x=>x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q));
+    return `<div class="category-panel ${openCats.has(cat)?"open":""}" data-category="${esc(cat)}">
+      <div class="muted">${cat} · ${arr.length}件</div>
+      <div class="grid">${arr.map(x=>button(x[0],x[1])).join("")}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("categories").innerHTML=`<div class="card"><div class="category-menu-wrap"><div class="category-menu">${menu}</div></div>${panels}</div>`;
+  const newMenuWrap=document.querySelector(".category-menu-wrap");
+  if(newMenuWrap)newMenuWrap.scrollLeft=menuScroll;
+
+  let styleHtml="";
+  for(const style of selectedStyles){
+    const arr2=(STYLES[style]||[]).filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q));
+    styleHtml+=`<div class="style-group"><strong>${style} の要素</strong><div class="grid">${arr2.map(x=>button(x[0],x[1])).join("")}</div></div>`;
+  }
+  document.getElementById("styleElements").innerHTML=styleHtml;
+
+  document.querySelectorAll("#characterType .character-btn").forEach(b=>b.classList.toggle("on",b.dataset.value===characterType));
+  update();
+  showTemplates();
+}
+
+function update(){
+  const styles=[...selectedStyles].map(s=>(DATA["方向性"].find(x=>x[0]===s)||[])[1]).filter(Boolean);
+  const base = characterType ? [BASE_PROMPT, CHARACTER_PROMPTS[characterType]] : [];
+  document.getElementById("output").value=[...base,...styles,...selected].join(", ");
+}
+async function copyPrompt(){
+  const text=document.getElementById("output").value;
+  if(!text)return;
+  try{await navigator.clipboard.writeText(text);}catch{const out=document.getElementById("output");out.focus();out.select();document.execCommand("copy");}
+  const toast=document.getElementById("toast");
+  toast.classList.remove("show");
+  void toast.offsetWidth;
+  toast.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer=setTimeout(()=>toast.classList.remove("show"),1400);
+}
+function clearAll(){
+  selected.clear();
+  selectedStyles.clear();
+  characterType=null;
+  activeCategory=null;
+  openCategory=null;
+  render();
+}
+function saveTemplate(){
+  const name=document.getElementById("tplName").value.trim(); if(!name)return;
+  const templates=JSON.parse(localStorage.getItem("promptClosetTemplates")||"{}");
+  templates[name]={styles:[...selectedStyles],items:[...selected],character:characterType};
+  localStorage.setItem("promptClosetTemplates",JSON.stringify(templates));
+  document.getElementById("tplName").value=""; showTemplates();
+}
+function loadTemplate(name){
+  const templates=JSON.parse(localStorage.getItem("promptClosetTemplates")||"{}"); const t=templates[name]; if(!t)return;
+  selectedStyles=new Set(t.styles||[]); selected=new Set(t.items||[]); characterType=(t.character===undefined ? null : t.character); render();
+}
+function deleteTemplate(name){
+  const templates=JSON.parse(localStorage.getItem("promptClosetTemplates")||"{}"); delete templates[name]; localStorage.setItem("promptClosetTemplates",JSON.stringify(templates)); showTemplates();
+}
+function showTemplates(){
+  const box=document.getElementById("templates"); if(!box)return;
+  const templates=JSON.parse(localStorage.getItem("promptClosetTemplates")||"{}");
+  box.innerHTML=Object.keys(templates).map(name=>`<div class="template-row"><span>${name}</span><button onclick="loadTemplate('${esc(name)}')">読み込む</button><button onclick="deleteTemplate('${esc(name)}')">削除</button></div>`).join("");
+}
+document.getElementById("search").addEventListener("input",render);
+render();
+</script></body></html>
