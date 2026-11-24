@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt Closet</title>
+<style>
+*{box-sizing:border-box}
+:root{--ink:#1e1b2e;--sub:#7a7585;--line:#e6dfd6;--ac1:#4b3f7a;--ac2:#b0688f;--grad:linear-gradient(135deg,var(--ac1),var(--ac2))}
+[hidden]{display:none!important}
+body{margin:0;background:radial-gradient(900px 500px at 0% -10%,#ece3f6 0,transparent 60%),radial-gradient(800px 480px at 100% 0,#fbe6df 0,transparent 55%),#f6f3ef;background-attachment:fixed;color:var(--ink);letter-spacing:.01em;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
+main{max-width:900px;margin:auto;padding:22px 16px 80px}
+.card{background:#ffffffe6;border:1px solid #fff;border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 10px 32px #4b3f7a14}
+.hero{background:var(--grad);color:#fff;padding:22px 20px;box-shadow:0 14px 36px #4b3f7a40}
+.hero .sub{color:#ffffffcc}
+h1{margin:0 0 4px;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:30px;font-weight:600;letter-spacing:.06em}
+h2{display:flex;align-items:center;gap:8px;font-size:15px;letter-spacing:.06em;margin:0 0 11px}
+h2::before{content:"";width:5px;height:16px;border-radius:3px;background:var(--grad)}
+.sub{font-size:13px;color:var(--sub)}.muted{font-size:12px;color:var(--sub);margin:2px 0 8px}.shuffle-note{font-size:12px;color:var(--sub)}
+input,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:14px;font-size:16px;background:#fffdfb;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus{outline:none;border-color:var(--ac2);box-shadow:0 0 0 4px #b0688f22}
+textarea{min-height:120px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;line-height:1.55}
+button{cursor:pointer;font-family:inherit;color:var(--ink)}button:active{transform:scale(.96)}
+.grid{display:flex;flex-wrap:wrap;gap:8px}
+.btn,.style,.cat-tab,.mini,.chip{padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px;transition:all .15s ease}
+.mini{padding:7px 12px;font-size:13px}.chip{padding:5px 10px;font-size:12px;background:#f4f1fa;border-color:#e0d9f0}
+.btn:hover,.style:hover,.cat-tab:hover,.mini:hover{border-color:var(--ac2)}
+.btn.on,.style.on,.cat-tab.on{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 5px 14px #4b3f7a40}
+.mini.accent{background:var(--grad);border-color:transparent;color:#fff}
+.style{font-weight:600;white-space:nowrap}
+.stylebox{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.stylebox::-webkit-scrollbar{display:none}
+.style-elements{margin-top:12px}.style-group{margin-top:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.primary,.danger{padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600}
+.primary{background:var(--grad);color:#fff;border:0;box-shadow:0 6px 16px #4b3f7a40}
+.danger{background:#fff;border:1px solid var(--line);color:var(--sub)}
+.shufflebtns{display:flex;gap:8px;margin-top:12px}.shufflebtns .primary{flex:1;padding:12px 8px;white-space:nowrap}
+.sub-menu{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}.sub-tab{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#faf8f6;font-size:13px;transition:all .15s ease}.sub-tab.on{background:#f1e9f6;border-color:var(--ac2);color:var(--ac1);font-weight:600}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}.cardhead h2{margin:0}
+.cat-tab{flex:0 0 auto;white-space:nowrap}
+.category-menu-wrap,.person-menu-wrap,.creature-menu-wrap{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;margin:0 0 10px;scrollbar-width:none}
+.category-menu-wrap::-webkit-scrollbar,.person-menu-wrap::-webkit-scrollbar,.creature-menu-wrap::-webkit-scrollbar{display:none}
+.category-menu{display:inline-flex;gap:8px;min-width:max-content}
+.category-panel{display:none}.category-panel.open{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.badge{display:inline-block;min-width:18px;margin-left:7px;padding:1px 6px;border-radius:999px;background:var(--grad);color:#fff;font-size:11px;line-height:16px}
+.cat-tab.on .badge{background:#ffffff40}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid #0003}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.chip.personchip{background:#f7ecf2;border-color:#ecc9db}
+.nav{display:flex;gap:8px;margin-top:16px}
+.navbtn{flex:1;padding:10px;border-radius:999px;border:1px solid #ffffff55;background:#ffffff26;color:#fff;font-weight:600;font-size:14px}
+.navbtn.on{background:#fff;color:var(--ac1)}.navbtn .badge{background:#ffffff40}.navbtn.on .badge{background:var(--grad)}
+.saverow{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}.saverow input{flex:1}.saverow .primary{white-space:nowrap}
+.saved-item{border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px;background:#fffdfb}
+.saved-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}.saved-top strong{font-size:16px}
+.saved-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.empty{padding:22px 8px;text-align:center;color:var(--sub);font-size:14px;line-height:1.7}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--grad);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:9999;box-shadow:0 8px 22px #4b3f7a55}.toast.show{opacity:1;transform:translate(-50%,0)}
+</style></head><body><main>
+<div class="card hero"><h1>Prompt Closet</h1><div class="sub">服・方向性・ポーズを選んで、コピペ用プロンプトを作成</div>
+<div class="nav"><button id="navMake" class="navbtn on" onclick="showView('make')">🎨 つくる</button><button id="navSaved" class="navbtn" onclick="showView('saved')">⭐ 保存済み<span id="savedCount" class="badge" hidden></span></button></div></div>
+
+<div id="viewMake">
+<div class="card"><input id="search" placeholder="登録プロンプトを検索…"></div>
+<div class="card"><h2 style="margin-bottom:4px">おまかせコーデ</h2><div class="shuffle-note">アウター・トップス・ボトムス・小物から組み合わせ。性別も自動で選びます。セット服と方向性は除外、服以外の選択は残ります。</div><div class="shufflebtns"><button class="primary" onclick="shuffleOutfit('male')">🎲 男性おまかせ</button><button class="primary" onclick="shuffleOutfit('female')">🎲 女性おまかせ</button></div></div>
+<div class="card"><div class="cardhead"><h2>人物</h2><div class="actions" style="margin:0"><button class="mini" onclick="randomPerson()">🎲 髪ランダム</button><button class="mini" onclick="clearPerson()">人物をクリア</button></div></div><div id="personBody"></div></div>
+<div class="card"><div class="cardhead"><h2>人外パーツ</h2><div class="actions" style="margin:0"><button class="mini" onclick="clearCreature()">クリア</button></div></div><div id="creatureBody"></div></div>
+<div id="styleCard" class="card"><h2>方向性</h2><div id="styles" class="stylebox"></div><div id="styleElements" class="style-elements"></div></div>
+<div id="categories"></div>
+<div class="card"><h2>生成プロンプト</h2><div id="chips" class="chips"></div><textarea id="output" readonly></textarea>
+<div class="actions"><button class="primary" onclick="copyPrompt()">コピー</button><button class="danger" onclick="clearAll()">選択をクリア</button></div>
+<div class="saverow"><input id="tplName" placeholder="この組み合わせに名前を付けて保存"><button class="primary" onclick="saveTemplate()">⭐ 保存</button></div></div>
+</div>
+
+<div id="viewSaved" hidden>
+<div class="card"><h2>保存した組み合わせ</h2><div class="muted">「読み込む」で「つくる」画面に戻って続きから編集できます。</div><div id="savedList"></div></div>
+<div class="card"><h2>バックアップ</h2><div class="muted">保存データはこのブラウザの中だけに入っています。機種変更やブラウザのデータ消去に備えて、書き出したテキストを控えておくと安心です。</div>
+<textarea id="backup" placeholder="書き出し／取り込み用テキスト"></textarea>
+<div class="actions"><button class="primary" onclick="exportTemplates()">書き出す（コピー）</button><button class="danger" onclick="importTemplates()">取り込む</button></div></div>
+</div>
+</main><div id="toast" class="toast"></div>
+<script>
+const DATA={"アウター":[["モッズコート","fishtail parka"],["トレンチコート","trench coat"],["Pコート","pea coat"],["MA-1","MA-1 bomber jacket"],["ジャケット","jacket"],["カーディガン","cardigan"],["カーディガン(ロング丈)","long cardigan"],["ノーカラーコート","collarless coat"],["ジップアップパーカー","zip-up hoodie"],["ブルゾン","blouson jacket"],["デニムジャケット","denim jacket"],["ライダースジャケット","leather biker jacket"],["ダッフルコート","duffle coat"],["ロングコート","long coat"],["テーラードジャケット","tailored jacket"],["ダブルブレストジャケット","double-breasted jacket"],["クロップドジャケット","cropped jacket"],["コーデュロイジャケット","corduroy jacket"],["コーチジャケット","coach jacket"],["スタジャン","varsity jacket"],["フィールドジャケット","field jacket"],["ユーティリティジャケット","utility jacket"],["ワークジャケット","work jacket"],["カバーオール","chore jacket"],["フライトジャケット","flight jacket"],["トラックジャケット","track jacket"],["ショート丈ブルゾン","cropped blouson jacket"],["ノーカラージャケット","collarless jacket"],["チャイナジャケット","Chinese jacket"],["ミリタリーコート","military coat"],["フード付きロングコート","hooded long coat"],["ケープコート","cape coat"],["ポンチョ","poncho"],["ローブコート","robe coat"],["ダスターコート","duster coat"],["ボレロ","bolero jacket","f"],["ケープレット","capelet","f"],["ファーコート","fur coat","f"],["ダウンジャケット","puffer jacket"],["ダウンコート","down coat"]],"トップス":[["Tシャツ","t-shirt"],["ドロップショルダーシャツ","drop-shoulder shirt"],["ハイネックニット","high-neck knit sweater"],["ケーブル編みセーター","cable-knit sweater"],["プルオーバーパーカー","pullover hoodie"],["ボタンダウンシャツ","button-down shirt"],["タンクトップ","tank top"],["ロンT","long-sleeve t-shirt"],["ワッフルTシャツ","waffle-knit t-shirt"],["ヘンリーネックシャツ","henley shirt"],["オープンカラーシャツ","open-collar shirt"],["ポロシャツ","polo shirt"],["スウェット","sweatshirt"],["タートルネック","turtleneck sweater"],["シャツジャケット","shirt jacket"],["スウェットベスト","sweat vest"],["ニットベスト","sweater vest"],["Vネックセーター","V-neck sweater"],["モックネックニット","mock-neck sweater"],["リブニット","ribbed knit sweater"],["モヘアニット","mohair sweater"],["フェアアイルセーター","Fair Isle sweater"],["ノルディックセーター","Nordic sweater"],["タートルネックカットソー","turtleneck shirt"],["バンドTシャツ","band t-shirt"],["プリントTシャツ","graphic t-shirt"],["ストライプシャツ","striped shirt"],["チェックシャツ","plaid shirt"],["フリルシャツ","ruffled shirt"],["ハイカラーシャツ","high-collar shirt"],["スタンドカラーシャツ","stand-collar shirt"],["ロングシャツ","long shirt"],["チュニックシャツ","tunic shirt"],["ドレープトップス","draped top"],["アシンメトリートップス","asymmetrical top"],["メッシュトップス","mesh top"],["レーストップス","lace top"],["カットソー","jersey knit top"],["ボーダーTシャツ","striped t-shirt"],["オフショルダートップス","off-shoulder top","f"],["ポロニット","knit polo shirt"],["総柄シャツ","all-over patterned shirt"],["ブラウス","blouse","f"],["フリルブラウス","ruffled blouse","f"],["リボンブラウス","bow blouse","f"],["パフスリーブブラウス","puff-sleeve blouse","f"],["レースブラウス","lace blouse","f"],["キャミソール","camisole","f"],["ノースリーブトップス","sleeveless top","f"],["チューブトップ","tube top","f"],["ホルターネックトップス","halter top","f"],["ペプラムトップス","peplum top","f"],["カシュクールトップス","wrap top","f"],["セーラーカラートップス","sailor collar top","f"],["ビスチェ","bustier","f"],["クロップドトップス","cropped top","f"]],"ボトムス":{"パンツ":[["スキニーパンツ","skinny pants"],["カーゴパンツ","cargo pants"],["サルエルパンツ","harem pants"],["ダメージジーンズ","distressed jeans"],["スラックス","slacks"],["ワイドパンツ","wide-leg pants"],["チノパン","chinos"],["ストレートジーンズ","straight-leg jeans"],["ワークパンツ","work pants"],["テーパードパンツ","tapered trousers"],["プリーツパンツ","pleated trousers"],["フレアパンツ","flared pants"],["ベルボトム","bell-bottom trousers"],["クロップドパンツ","cropped trousers"],["コーデュロイパンツ","corduroy trousers"],["ペインターパンツ","painter pants"],["カーペンターパンツ","carpenter pants"],["ベイカーパンツ","baker pants"],["ユーティリティパンツ","utility trousers"],["ミリタリーパンツ","military trousers"],["トラックパンツ","track pants"],["パラシュートパンツ","parachute pants"],["ジョッパーズパンツ","jodhpur pants"],["バルーンパンツ","balloon pants"],["ロールアップパンツ","rolled-up trousers"],["レザーパンツ","leather pants"],["ベルテッドパンツ","belted trousers"],["サスペンダーパンツ","suspender trousers"],["袴風ワイドパンツ","hakama-style wide-leg pants"]],"スカート":[["キュロットパンツ","culotte pants","f"],["スカート","skirt","f"],["ミニスカート","miniskirt","f"],["ミディスカート","midi skirt","f"],["ロングスカート","long skirt","f"],["プリーツスカート","pleated skirt","f"],["フレアスカート","flared skirt","f"],["Aラインスカート","A-line skirt","f"],["タイトスカート","pencil skirt","f"],["マーメイドスカート","mermaid skirt","f"],["デニムスカート","denim skirt","f"],["チェックスカート","plaid skirt","f"],["レザースカート","leather skirt","f"],["チュールスカート","tulle skirt","f"],["ティアードスカート","tiered skirt","f"],["ギャザースカート","gathered skirt","f"],["ラップスカート","wrap skirt","f"],["サーキュラースカート","circle skirt","f"],["バルーンスカート","balloon skirt","f"],["ハイウエストスカート","high-waisted skirt","f"],["制服スカート","school uniform skirt","f"],["キルト","kilt"]],"ショーツ":[["ショートパンツ","shorts"],["ワークショーツ","work shorts"],["バミューダショーツ","Bermuda shorts"]]},"ワンピース・セット":{"ワンピース・ドレス":[["ワンピース","dress","f"],["サマードレス","sundress","f"],["ロングワンピース","long dress","f"],["マキシワンピース","maxi dress","f"],["ミニワンピース","short dress","f"],["シャツワンピース","shirt dress","f"],["ニットワンピース","sweater dress","f"],["キャミワンピース","slip dress","f"],["ノースリーブワンピース","sleeveless dress","f"],["フレアワンピース","A-line dress","f"],["ティアードワンピース","tiered dress","f"],["レースワンピース","lace dress","f"],["ジャンパースカート","pinafore dress","f"],["セーラーワンピース","sailor dress","f"],["パーティードレス","party dress","f"],["カクテルドレス","cocktail dress","f"],["イブニングドレス","evening gown","f"],["ボールガウン","ball gown","f"],["ウェディングドレス","wedding dress","f"]],"セットアップ":[["スーツ","suit"],["スリーピーススーツ","three-piece suit"],["ジャージ姿","tracksuit"],["着ぐるみ","animal onesie"],["部屋着","loungewear"],["スウェット上下","sweatshirt and sweatpants"],["ジャージ","sportswear"],["パジャマ","pajamas"],["Tシャツと短パン","t-shirt and shorts"],["スカートスーツ","skirt suit","f"],["オーバーオール","overalls"],["オールインワン","jumpsuit"],["つなぎ","coveralls"]]},"コスチューム":[["着物","kimono"],["袴","hakama"],["韓服","hanbok"],["カンフー服","kung fu uniform"],["作務衣","samue"],["甚平","jinbei"],["羽織","haori"],["浴衣","yukata"],["チャイナシャツ","Chinese shirt"],["マオカラー服","Mao-collar outfit"],["チャイナドレス","qipao"],["ナース服","nurse uniform"],["ロリータファッション","Lolita fashion"],["ゴシックロリータ","gothic Lolita fashion"],["クラシカルロリータ","classic Lolita fashion"],["メイド服","maid outfit"],["巫女服","miko outfit"],["セーラー服","sailor uniform"],["制服(ブレザー)","school uniform"],["魔女服","witch outfit"],["ウェイトレス服","waitress uniform"],["エプロンドレス","apron dress"],["チアリーダー","cheerleader outfit"],["修道服","nun's habit"]],"小物":{"靴":[["編み上げブーツ","lace-up boots"],["ローファー","loafers"],["革靴","leather dress shoes"],["ブーツ","boots"],["コンバットブーツ","combat boots"],["スニーカー","sneakers"],["ワークブーツ","work boots"],["トレッキングブーツ","hiking boots"],["パンプス","pumps","f"],["ハイヒール","high heels","f"],["メリージェーン","Mary Jane shoes","f"],["バレエシューズ","ballet flats","f"],["ニーハイブーツ","thigh-high boots","f"],["サンダル","sandals"],["ショートブーツ","ankle boots"]],"靴下・タイツ":[["ソックス","socks"],["ハイソックス","knee-high socks"],["ニーハイソックス","thigh-high socks","f"],["タイツ","tights","f"],["黒タイツ","black tights","f"],["ストッキング","stockings","f"],["ルーズソックス","loose socks","f"]],"アクセ・装飾":[["丸眼鏡","round glasses"],["ネクタイ","necktie"],["チョーカー","choker"],["首輪","collar"],["ネックレス","necklace"],["サスペンダー","suspenders"],["蝶ネクタイ","bow tie"],["リボンタイ","ribbon tie"],["チェーンネックレス","chain necklace"],["チェーンアクセサリー","chain accessories"],["リング","rings"],["スタッズ","studs"],["安全ピン","safety pins"],["バングル","bangle"],["腕時計","wristwatch"],["懐中時計","pocket watch"],["ゴーグル","goggles"],["マフラー","scarf"],["革ベルト","leather belt"],["装飾ベルト","ornate belt"],["ハーネス","body harness"],["ユーティリティベルト","utility belt"],["イヤリング","earrings","f"],["パールネックレス","pearl necklace","f"],["ブローチ","brooch","f"],["ピアス","ear piercings"],["ペンダント","pendant"]],"帽子・手袋":[["キャップ","cap"],["ニット帽","beanie"],["ハンチング帽","flat cap"],["ベレー帽","beret"],["シルクハット","top hat"],["革手袋","leather gloves"],["フィンガーレスグローブ","fingerless gloves"],["ヘッドドレス","headdress","f"],["ヴェール","veil","f"],["レースの手袋","lace gloves","f"],["ボンネット","bonnet","f"],["麦わら帽子","straw hat"],["キャスケット","newsboy cap"]],"バッグ・持ち物":[["ギター","guitar"],["煙管","kiseru pipe"],["煙草","cigarette"],["ケーキ","cake"],["パフェ","parfait"],["革鞄","leather satchel"],["バックパック","backpack"],["ショルダーバッグ","shoulder bag"],["メッセンジャーバッグ","messenger bag"],["トートバッグ","tote bag"],["傘","umbrella"],["杖","cane"],["装飾的なステッキ","ornate cane"],["ハンドバッグ","handbag","f"],["ミニバッグ","mini bag","f"],["日傘","parasol","f"],["扇子","folding fan"],["花束","bouquet"],["本","book"]]},"構図・カメラ":[["上から見下ろす","from above"],["俯瞰","bird's-eye view"],["真上から","from directly above"],["下から見上げる","from below"],["煽り","worm's-eye view"],["正面","front view"],["斜め前","three-quarter view"],["真横","from side"],["背後","from behind"],["顔のアップ","face close-up"],["アップ","close-up"],["バストアップ","portrait"],["上半身","upper body"],["膝上","cowboy shot"],["全身","full body"],["引きの構図","wide shot"],["広角","wide-angle lens"],["魚眼","fisheye lens"],["ダッチアングル","dutch angle"],["パース強め","strong perspective"],["奥行き強調","foreshortening"],["被写界深度","depth of field"],["背景ぼかし","blurred background"],["中央構図","centered composition"],["主観視点","pov"]],"ポーズ・視線":[["自然な立ちポーズ","natural standing pose"],["モデル立ち","model pose"],["自然な座りポーズ","natural sitting pose"],["しゃがむ","crouching"],["仰向けに寝転ぶ","lying on back"],["うつ伏せに寝転ぶ","lying face down"],["指ハート","finger heart gesture"],["中指立てる","raising middle finger"],["こちらを向く","looking at viewer"],["横を向く","side view"],["遠くを見る","looking into the distance"],["視線を落とす","looking down"],["自然な視線","natural gaze"],["壁にもたれる","leaning against a wall"],["椅子に深く座る","sitting deep in a chair"],["腕を組む","crossed arms"],["振り返る","looking back"],["片手をポケットに入れる","one hand in pocket"],["ピースサイン","peace sign"],["ダブルピース","double peace sign"],["手を振る","waving"],["投げキス","blowing a kiss"],["指をさす","pointing at viewer"],["手を差し出す","outstretched hand"],["カメラに手を伸ばす","reaching toward viewer"],["敬礼","salute"],["拳を握る","clenched fist"],["頬杖をつく","head rest"],["頬に手を当てる","hand on own cheek"],["口元に手を当てる","hand over own mouth"],["髪をかき上げる","hand in own hair"],["髪を耳にかける","tucking hair behind ear"],["腰に手を当てる","hand on hip"],["両手をポケットに入れる","hands in pockets"],["後ろで手を組む","hands behind back"],["胸の前で手を合わせる","own hands together"],["両手を上げる","arms up"],["伸びをする","stretching"],["首をかしげる","head tilt"],["前かがみ","leaning forward"],["足を組んで座る","sitting with legs crossed"],["あぐらで座る","sitting cross-legged"],["体育座り","hugging own knees"],["歩く","walking"],["走る","running"],["ジャンプ","jumping"],["見上げる","looking up"],["目をそらす","looking away"],["上目遣い","looking up at viewer"],["肩越しに見る","looking over shoulder"]],"表情・態度":[["微笑む","gentle smile"],["穏やかに微笑む","soft, gentle smile"],["楽しそうに笑う","smiling happily"],["ウインク","wink"],["片目をつむる","one eye closed"],["目を閉じる","closed eyes"],["満面の笑み","big smile, open mouth"],["声を出して笑う","laughing"],["照れ笑い","embarrassed smile"],["赤面","blush"],["驚いた顔","surprised expression"],["涙目","teary eyes"],["泣き顔","crying with tears"],["怒った顔","angry expression"],["真顔","serious expression"],["悲しげな表情","sad expression"],["頬を膨らませる","puffed cheeks"],["口をとがらせる","pouting"],["舌を出す","tongue out"],["あくびする","yawning"],["ジト目","jitome"],["歯を食いしばる","clenched teeth"],["優しい目","gentle eyes"],["凛とした表情","determined expression"]],"方向性":[["ゴス(黒服)","goth fashion"],["スチームパンク","steampunk fashion"],["ミリタリー","military fashion"],["サイバーパンク","cyberpunk fashion"],["ナード系","nerdy fashion"],["プレッピー","preppy fashion"],["聖職者風","clerical attire"],["ダークアカデミア","dark academia fashion"],["ヴィクトリアン","Victorian fashion"],["パンク","punk fashion"],["ロック系","rock fashion"],["ワークウェア","workwear fashion"],["アウトドア系","outdoor fashion"],["ストリート系","streetwear fashion"],["ヴィンテージ","vintage fashion"],["ディーゼルパンク","dieselpunk fashion"],["アリス風","whimsical Victorian fantasy fashion"],["夢かわY2K","dreamy pastel Y2K fashion"],["地雷系・サブカル系","Japanese alternative street fashion, cute dark subculture fashion"]]}
+const STYLES={
+"ゴス(黒服)":[["コルセット","corset"],["ベスト","waistcoat"],["ハーネス","body harness"],["装飾ストラップ","decorative straps"],["ハイカラーシャツ","high-collar shirt"],["ジャボ","jabot"],["装飾ベルト","ornate belt"],["チェーンアクセサリー","chain accessories"],["レースアップブーツ","lace-up boots"],["フリルシャツ","ruffled shirt"]],
+"スチームパンク":[["コルセット","corset"],["ベスト","waistcoat"],["ハーネス","body harness"],["ゴーグル","goggles"],["懐中時計","pocket watch"],["歯車モチーフ","gear motifs"],["革ベルト","leather belt"],["装飾ボタン","ornate buttons"],["革手袋","leather gloves"],["ロングコート","long coat"],["テールコート","tailcoat"],["シルクハット","top hat"],["スチームパンク風アクセサリー","steampunk accessories"]],
+"ミリタリー":[["ミリタリージャケット","military jacket"],["フィールドジャケット","field jacket"],["ユーティリティベスト","utility vest"],["タクティカルベスト","tactical vest"],["ミリタリーシャツ","military shirt"],["カーゴパンツ","cargo pants"],["ミリタリーパンツ","military trousers"],["コンバットブーツ","combat boots"],["ミリタリーベルト","military belt"],["弾薬ポーチ","ammunition pouches"],["ドッグタグ","military dog tags"],["肩章","shoulder epaulettes"],["迷彩柄","camouflage pattern"]],
+"サイバーパンク":[["テックウェアジャケット","techwear jacket"],["タクティカルベスト","tactical vest"],["ハーネス","body harness"],["ユーティリティベルト","utility belt"],["カーゴパンツ","cargo pants"],["テックウェアパンツ","techwear pants"],["アシンメトリーな服","asymmetrical clothing"],["フィンガーレスグローブ","fingerless gloves"],["LEDアクセサリー","LED accessories"],["発光ライン","glowing accents"],["サイバーゴーグル","cyber goggles"],["フェイスマスク","face mask"],["メカニカルパーツ","mechanical components"]],
+"ナード系":[["カーディガン","cardigan"],["ベスト","sweater vest"],["チェックシャツ","plaid shirt"],["ボタンダウンシャツ","button-down shirt"],["ハイネックニット","high-neck knit sweater"],["セーター","sweater"],["サスペンダー","suspenders"],["蝶ネクタイ","bow tie"],["丸眼鏡","round glasses"],["チノパン","chinos"],["ローファー","loafers"]],
+"プレッピー":[["ブレザー","blazer"],["スクールブレザー","school blazer"],["ニットベスト","sweater vest"],["カーディガン","cardigan"],["ポロシャツ","polo shirt"],["ボタンダウンシャツ","button-down shirt"],["ネクタイ","necktie"],["リボンタイ","ribbon tie"],["チノパン","chinos"],["ローファー","loafers"]],
+"聖職者風":[["立襟","clerical collar"],["キャソック","cassock"],["クレリックシャツ","clerical shirt"],["ストール","priest's stole"],["サープリス","surplice"],["聖職者用祭服","clerical vestments"],["神父服","priest's robe"],["十字架ペンダント","cross pendant"]],
+"ダークアカデミア":[["ツイードジャケット","tweed jacket"],["ウールコート","wool coat"],["ニットベスト","knit vest"],["タートルネック","turtleneck sweater"],["ボタンダウンシャツ","button-down shirt"],["プリーツパンツ","pleated trousers"],["サスペンダー","suspenders"],["革靴","leather dress shoes"],["丸眼鏡","round glasses"],["革鞄","leather satchel"]],
+"ヴィクトリアン":[["テールコート","tailcoat"],["ベスト","waistcoat"],["ハイカラーシャツ","high-collar shirt"],["ジャボ","jabot"],["フロックコート","frock coat"],["懐中時計","pocket watch"],["装飾ボタン","ornate buttons"],["革手袋","leather gloves"],["シルクハット","top hat"],["装飾的なステッキ","ornate cane"]],
+"パンク":[["レザージャケット","leather jacket"],["ダメージジーンズ","distressed jeans"],["バンドTシャツ","band t-shirt"],["スタッズ","studs"],["チェーン","chains"],["安全ピン","safety pins"],["コンバットブーツ","combat boots"],["パンクアクセサリー","punk accessories"]],
+"ロック系":[["レザージャケット","leather jacket"],["バンドTシャツ","band t-shirt"],["スキニーパンツ","skinny pants"],["ダメージジーンズ","distressed jeans"],["チェーンネックレス","chain necklace"],["リング","rings"],["ブーツ","boots"],["ロック系アクセサリー","rock accessories"]],
+"ワークウェア":[["ワークジャケット","work jacket"],["カバーオール","coveralls jacket"],["ワークシャツ","work shirt"],["カーゴパンツ","cargo pants"],["ワークパンツ","work pants"],["サスペンダー","suspenders"],["ワークブーツ","work boots"],["ユーティリティベルト","utility belt"]],
+"アウトドア系":[["フリースジャケット","fleece jacket"],["マウンテンパーカー","mountain parka"],["ダウンベスト","down vest"],["カーゴパンツ","cargo pants"],["アウトドアパンツ","outdoor pants"],["トレッキングブーツ","hiking boots"],["バックパック","backpack"],["アウトドアアクセサリー","outdoor accessories"]],
+"ストリート系":[["オーバーサイズパーカー","oversized hoodie"],["ボンバージャケット","bomber jacket"],["オーバーサイズTシャツ","oversized t-shirt"],["ワイドパンツ","wide-leg pants"],["カーゴパンツ","cargo pants"],["スニーカー","sneakers"],["キャップ","cap"],["チェーンアクセサリー","chain accessories"]],
+"ヴィンテージ":[["ヴィンテージジャケット","vintage jacket"],["ヴィンテージシャツ","vintage shirt"],["カーディガン","cardigan"],["ハイウエストパンツ","high-waisted pants"],["ストレートジーンズ","straight-leg jeans"],["ローファー","loafers"],["ヴィンテージアクセサリー","vintage accessories"]],
+"ディーゼルパンク":[["レザージャケット","leather jacket"],["ミリタリーコート","military coat"],["カーゴパンツ","cargo pants"],["ハーネス","body harness"],["革ベルト","leather belt"],["ゴーグル","goggles"],["ガスマスク","gas mask"],["機械部品","mechanical parts"],["革手袋","leather gloves"]],
+"アリス風":[["懐中時計","pocket watch"],["燕尾服","tailcoat"],["ベスト","waistcoat"],["フリルシャツ","ruffled shirt"],["リボンタイ","ribbon tie"],["ストライプ柄","striped pattern"],["チェック柄","checkered pattern"],["ロングコート","long coat"],["シルクハット","top hat"],["トランプモチーフ","playing card motifs"],["時計モチーフ","clock motifs"],["ウサギモチーフ","rabbit motifs"],["懐中時計のチェーン","pocket watch chain"]],
+"夢かわY2K":[["クロップドトップス","cropped top"],["ローライズパンツ","low-rise pants"],["レッグウォーマー","leg warmers"],["厚底スニーカー","platform sneakers"],["大きなリボン","oversized bows"],["ポップなアクセサリー","playful accessories"]],
+"地雷系・サブカル系":[["重ね着","layered outfit"],["ベルトストラップ","belt straps"],["チェーンアクセサリー","chain accessories"],["レッグウォーマー","leg warmers"],["厚底ブーツ","platform boots"],["大きなリボン","oversized bows"],["アームカバー","detached sleeves"]]
+};
+
+
+const COLORS=[["黒髪","black","#1a1a1a"],["青みがかった黒","blue-black","#1b2233"],["ダークブラウン","dark brown","#4a3022"],["茶髪","brown","#7a5230"],["栗色","chestnut brown","#8b5a3c"],["ハニーブロンド","honey blonde","#d9a441"],["金髪","blonde","#f0d264"],["プラチナブロンド","platinum blonde","#efe6c8"],["ベージュ","beige","#d8c3a5"],["アッシュグレー","ash grey","#9ea3a8"],["銀髪","silver","#c9ccd1"],["白髪","white","#ffffff"],["赤髪","red","#d02a2a"],["ワインレッド","burgundy","#7b1f35"],["オレンジ","orange","#f08a24"],["ピンク","pink","#f49ac1"],["ローズピンク","rose pink","#e0728f"],["紫","purple","#7d4bb5"],["ラベンダー","lavender","#b9a3e3"],["青","blue","#2f6fd6"],["水色","light blue","#8fd0f2"],["紺","navy blue","#1d2d5c"],["ターコイズ","turquoise","#2bb7b3"],["緑","green","#3f9f4f"],["ミントグリーン","mint green","#9be0c1"],["レインボー","rainbow-colored","linear-gradient(90deg,#f44,#fa3,#ee4,#4c6,#4ae,#86d)"]];
+const GENDER=[["男性","male"],["女性","female"]];
+const PERSON={
+"肌色":[["色白","fair skin","#f6e3d6"],["標準","natural skin tone","#e8c3a0"],["褐色","dark skin","#a9714a"]],
+"髪色":COLORS.map(c=>[c[0],c[1]+" hair",c[2]]),
+"長さ":[["ベリーショート","very short hair"],["ショート","short hair"],["ボブ","bob cut"],["ミディアム","medium hair"],["セミロング","medium-long hair"],["ロング","long hair"],["超ロング","very long hair"]],
+"髪型":[["ストレート","straight hair"],["ウェーブ","wavy hair"],["天然パーマ","curly hair"],["ゆるふわ","soft fluffy hair"],["ボサボサ","messy hair"],["外ハネ","outward-flipped hair"],["内巻き","inward-curled hair"],["ポニーテール","ponytail"],["ローポニー","low ponytail"],["サイドテール","side ponytail"],["ハーフアップ","half-up hairstyle"],["ツインテール","twin tails"],["ツーサイドアップ","two side up"],["三つ編み","braid"],["お団子","hair bun"],["ウルフカット","wolf cut"],["マッシュ","mushroom cut"],["ツーブロック","undercut"],["刈り上げ","shaved sides"],["オールバック","slicked-back hair"],["姫カット","hime cut"]],
+"前髪・分け目":[["ぱっつん前髪","blunt bangs"],["流し前髪","swept bangs"],["シースルーバング","wispy see-through bangs"],["長めの前髪","long bangs"],["アシンメトリー前髪","asymmetrical bangs"],["片目隠れ","hair covering one eye"],["センター分け","center-parted hair"],["七三分け","side-parted hair"],["かき上げ","swept-back hair"],["おでこ出し","forehead visible"],["前髪なし","no bangs"]],
+"差し色":COLORS.filter(c=>c[1]!=="black"&&c[1]!=="blue-black").map(c=>[c[0],c[1]+" highlights",c[2]]),
+"アレンジ":[["インナーカラー","inner color hair"],["メッシュ","streaked hair"],["グラデーション","ombre hair"],["毛先カラー","dip-dyed hair tips"],["ツートンカラー","two-tone hair"],["ハイライト","hair highlights"]],
+"髪飾り":[["ヘアピン","hairpin"],["ヘアクリップ","hair clip"],["ヘアバンド","hairband"],["カチューシャ","headband"],["リボン","hair ribbon"],["シュシュ","scrunchie"],["花の髪飾り","flower hair ornament"],["かんざし","kanzashi hairpin"]]
+};
+const CREATURE={
+"耳":[["ケモ耳", "animal ears"],["猫耳", "cat ears"],["犬耳", "dog ears"],["狐耳", "fox ears"],["狼耳", "wolf ears"],["うさ耳", "rabbit ears"],["垂れ耳", "floppy ears"],["熊耳", "bear ears"],["エルフ耳", "pointy ears"],["ひれ耳", "fins on head"]],
+"ツノ":[["角", "horns"],["小さな角", "small horns"],["長い角", "long horns"],["一本角", "single horn"],["鬼の角", "oni horns"],["悪魔の角", "demon horns"],["竜の角", "dragon horns"],["羊の角", "curled horns"],["鹿の角", "antlers"],["折れた角", "broken horn"]],
+"羽根":[["天使の羽", "angel wings"],["悪魔の翼", "demon wings"],["鳥の翼", "bird wings"],["コウモリの翼", "bat wings"],["竜の翼", "dragon wings"],["蝶の羽", "butterfly wings"],["妖精の羽", "fairy wings"],["白い翼", "white wings"],["黒い翼", "black wings"],["光の翼", "glowing wings"],["片翼", "single wing"],["小さな翼", "small wings"],["翼を広げる", "spread wings"],["羽毛", "feathers"]],
+"しっぽ":[["しっぽ", "tail"],["猫のしっぽ", "cat tail"],["犬のしっぽ", "dog tail"],["狐のしっぽ", "fox tail"],["狼のしっぽ", "wolf tail"],["うさぎのしっぽ", "rabbit tail"],["ふさふさのしっぽ", "fluffy tail"],["九尾", "multiple tails"],["悪魔のしっぽ", "demon tail"],["竜のしっぽ", "dragon tail"]],
+"その他":[["光輪", "halo"],["牙", "fangs"],["八重歯", "fang"],["鋭い爪", "sharp claws"],["鱗", "scales"],["縦長の瞳孔", "slit pupils"],["光る瞳", "glowing eyes"],["オッドアイ", "heterochromia"],["触角", "antennae"],["第三の目", "third eye"],["獣の手", "animal hands"],["獣の足", "animal feet"],["毛皮", "fur"],["ひれ", "fins"],["人魚の尾", "mermaid tail"]]
+};
+const PSINGLE=new Set(["肌色","髪色","長さ","前髪・分け目","差し色"]);
+const PNOTE={"差し色":"メッシュ等の2色目"};
+const PTABS=["性別",...Object.keys(PERSON)];
+const CHARACTER_PROMPTS={male:"1boy, solo male, adult male",female:"1girl"};
+const BASE_PROMPT="masterpiece, best quality, highly detailed, clean illustration, detailed face, detailed facial features, natural proportions, coherent details";
+const SHUFFLE_CATS=["アウター","トップス","ボトムス","小物"];
+const SHUFFLE_COUNTS={"アウター":1,"トップス":1,"ボトムス":1,"小物":2};
+const TPL_KEY="promptClosetTemplates";
+const esc=s=>String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+const escHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const flat=cat=>{const v=DATA[cat]||[];return Array.isArray(v)?v:Object.values(v).flat();};
+const JP={};
+Object.keys(DATA).forEach(c=>flat(c).forEach(x=>{if(!JP[x[1]])JP[x[1]]=x[0]}));
+Object.values(STYLES).forEach(a=>a.forEach(x=>{if(!JP[x[1]])JP[x[1]]=x[0]}));
+Object.values(CREATURE).forEach(a=>a.forEach(x=>{if(!JP[x[1]])JP[x[1]]=x[0]}));
+
+let selected=new Set(),selectedStyles=new Set(),characterType=null,openCategory=null,openPerson=null,openCreature=null,tplList=[];
+const psel={};Object.keys(PERSON).forEach(k=>psel[k]=new Set());
+
+/* ---------- toast / clipboard ---------- */
+function showToast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;
+  t.classList.remove("show");void t.offsetWidth;t.classList.add("show");
+  clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>t.classList.remove("show"),1500);
+}
+async function copyText(text){
+  if(!text)return false;
+  try{await navigator.clipboard.writeText(text);return true;}catch(e){}
+  try{const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();return ok;}catch(e){return false;}
+}
+async function copyPrompt(){
+  const text=document.getElementById("output").value;if(!text)return;
+  showToast(await copyText(text)?"コピーしたよ！":"コピーできなかった…");
+}
+
+/* ---------- person ---------- */
+const personOptions=g=>g==="性別"?GENDER.map(x=>[x[0],x[1],null]):PERSON[g];
+const personOn=(g,en)=>g==="性別"?characterType===en:psel[g].has(en);
+const personCount=g=>g==="性別"?(characterType?1:0):psel[g].size;
+function labelOf(g,en){const it=personOptions(g).find(x=>x[1]===en);return it?it[0]:en;}
+function personClick(g,en){if(g==="性別")setCharacter(en);else togglePerson(g,en);}
+function setCharacter(type){characterType=(characterType===type)?null:type;render();}
+function togglePerson(g,en){
+  const set=psel[g];
+  if(set.has(en))set.delete(en);
+  else{if(PSINGLE.has(g))set.clear();set.add(en);}
+  render();
+}
+function toggleTab(g){openPerson=(openPerson===g)?null:g;render();}
+function clearPerson(){Object.keys(PERSON).forEach(g=>psel[g].clear());characterType=null;render();}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function randomPerson(){
+  ["髪色","長さ","髪型","前髪・分け目","差し色","アレンジ","髪飾り"].forEach(g=>psel[g].clear());
+  psel["髪色"].add(pick(PERSON["髪色"])[1]);
+  psel["長さ"].add(pick(PERSON["長さ"])[1]);
+  psel["髪型"].add(pick(PERSON["髪型"])[1]);
+  if(Math.random()<.6)psel["前髪・分け目"].add(pick(PERSON["前髪・分け目"])[1]);
+  render();
+}
+function renderPerson(q){
+  const box=document.getElementById("personBody");
+  const old=box.querySelector(".person-menu-wrap");const sc=old?old.scrollLeft:0;
+  const menu=PTABS.map(g=>{const n=personCount(g);return `<button class="cat-tab ${openPerson===g?"on":""}" onclick="toggleTab('${esc(g)}')">${g}${n?`<span class="badge">${n}</span>`:""}</button>`;}).join("");
+  const panels=PTABS.map(g=>{
+    const arr=personOptions(g).filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q));
+    const note=g==="性別"?"1つ選択":(PNOTE[g]||(PSINGLE.has(g)?"1つ選択":"複数OK"));
+    const btns=arr.map(x=>{
+      const dot=x[2]?`<span class="dot" style="background:${x[2]}"></span>`:"";
+      return `<button class="btn ${personOn(g,x[1])?"on":""}" onclick="personClick('${esc(g)}','${esc(x[1])}')">${dot}${x[0]}</button>`;
+    }).join("");
+    return `<div class="category-panel ${openPerson===g?"open":""}"><div class="muted">${g} · ${note} · ${arr.length}件</div><div class="grid">${btns}</div></div>`;
+  }).join("");
+  box.innerHTML=`<div class="person-menu-wrap"><div class="category-menu">${menu}</div></div>${panels}`;
+  const nw=box.querySelector(".person-menu-wrap");if(nw)nw.scrollLeft=sc;
+}
+
+/* ---------- creature parts ---------- */
+const CTABS=Object.keys(CREATURE);
+const creatureCount=g=>CREATURE[g].filter(x=>selected.has(x[1])).length;
+function toggleCreatureTab(g){openCreature=(openCreature===g)?null:g;render();}
+function clearCreature(){CTABS.forEach(g=>CREATURE[g].forEach(x=>selected.delete(x[1])));render();}
+function renderCreature(q){
+  const box=document.getElementById("creatureBody");
+  const old=box.querySelector(".creature-menu-wrap");const sc=old?old.scrollLeft:0;
+  const menu=CTABS.map(g=>{const n=creatureCount(g);return `<button class="cat-tab ${openCreature===g?"on":""}" onclick="toggleCreatureTab('${esc(g)}')">${g}${n?`<span class="badge">${n}</span>`:""}</button>`;}).join("");
+  const panels=CTABS.map(g=>{
+    const arr=CREATURE[g].filter(x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q));
+    return `<div class="category-panel ${openCreature===g?"open":""}"><div class="muted">${g} · 複数OK · ${arr.length}件</div><div class="grid">${arr.map(x=>itemBtn(x[0],x[1])).join("")}</div></div>`;
+  }).join("");
+  box.innerHTML=`<div class="creature-menu-wrap"><div class="category-menu">${menu}</div></div>${panels}`;
+  const nw=box.querySelector(".creature-menu-wrap");if(nw)nw.scrollLeft=sc;
+}
+
+/* ---------- outfit ---------- */
+const itemBtn=(jp,en)=>`<button class="btn ${selected.has(en)?"on":""}" onclick="toggle('${esc(en)}')">${jp}</button>`;
+const openSub={};
+function toggleSub(cat,sub){openSub[cat]=sub;render();}
+function panelHtml(cat,q,match){
+  const open=openCategory===cat?"open":"";
+  const v=DATA[cat]||[];
+  const grid=arr=>`<div class="grid">${arr.map(x=>itemBtn(x[0],x[1])).join("")}</div>`;
+  if(Array.isArray(v)){const arr=v.filter(match);return `<div class="category-panel ${open}"><div class="muted">${cat} · ${arr.length}件</div>${grid(arr)}</div>`;}
+  if(q){const arr=flat(cat).filter(match);return `<div class="category-panel ${open}"><div class="muted">${cat} · 検索結果 ${arr.length}件</div>${grid(arr)}</div>`;}
+  const subs=Object.keys(v);
+  const cur=subs.includes(openSub[cat])?openSub[cat]:subs[0];
+  const tabs=subs.map(s=>{const n=v[s].filter(x=>selected.has(x[1])).length;return `<button class="sub-tab ${s===cur?"on":""}" onclick="toggleSub('${esc(cat)}','${esc(s)}')">${s}${n?`<span class="badge">${n}</span>`:""}</button>`;}).join("");
+  return `<div class="category-panel ${open}"><div class="sub-menu">${tabs}</div><div class="muted">${cat} › ${cur} · ${v[cur].length}件</div>${grid(v[cur])}</div>`;
+}
+function toggleCategory(cat){openCategory=(openCategory===cat)?null:cat;render();}
+function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function shuffleOutfit(g){
+  const male=(g==="male");
+  for(const cat of SHUFFLE_CATS)flat(cat).forEach(x=>selected.delete(x[1]));
+  for(const cat of SHUFFLE_CATS){
+    let pool=flat(cat);
+    if(cat==="小物")pool=pool.filter(x=>!["guitar","cake","parfait"].includes(x[1]));
+    if(male)pool=pool.filter(x=>x[2]!=="f");
+    shuffleArray(pool).slice(0,SHUFFLE_COUNTS[cat]||1).forEach(x=>selected.add(x[1]));
+  }
+  characterType=g;
+  render();
+}
+function toggle(en){if(selected.has(en))selected.delete(en);else selected.add(en);render();}
+function toggleStyle(style){
+  if(selectedStyles.has(style)){selectedStyles.delete(style);(STYLES[style]||[]).forEach(x=>selected.delete(x[1]));}
+  else{selectedStyles.add(style);(STYLES[style]||[]).forEach(x=>selected.add(x[1]));}
+  render();
+}
+
+/* ---------- prompt building ---------- */
+function validP(g,arr){
+  let a=(arr||[]).filter(en=>PERSON[g].some(x=>x[1]===en));
+  return PSINGLE.has(g)?a.slice(0,1):a;
+}
+function currentState(){
+  return {styles:[...selectedStyles],items:[...selected],character:characterType,hair:Object.fromEntries(Object.keys(PERSON).map(g=>[g,[...psel[g]]]))};
+}
+function buildTags(t){
+  const chara=CHARACTER_PROMPTS[t.character];
+  const person=Object.keys(PERSON).flatMap(g=>validP(g,t.hair&&t.hair[g]));
+  const styles=(t.styles||[]).map(s=>(DATA["方向性"].find(x=>x[0]===s)||[])[1]).filter(Boolean);
+  return [...(chara?[chara]:[]),...person,...styles,...(t.items||[]),...(chara?[BASE_PROMPT]:[])];
+}
+function tagLabels(t){
+  const out=[];
+  if(CHARACTER_PROMPTS[t.character])out.push(labelOf("性別",t.character));
+  Object.keys(PERSON).forEach(g=>validP(g,t.hair&&t.hair[g]).forEach(en=>out.push(labelOf(g,en))));
+  (t.styles||[]).forEach(s=>out.push(s));
+  (t.items||[]).forEach(en=>out.push(JP[en]||en));
+  return out;
+}
+function renderChips(){
+  const box=document.getElementById("chips");let h="";
+  if(characterType)h+=`<button class="chip personchip" onclick="setCharacter('${esc(characterType)}')">${labelOf("性別",characterType)} ×</button>`;
+  for(const g of Object.keys(PERSON))for(const en of psel[g])
+    h+=`<button class="chip personchip" onclick="togglePerson('${esc(g)}','${esc(en)}')">${g==="差し色"?"差し色:":""}${labelOf(g,en)} ×</button>`;
+  for(const en of selected)h+=`<button class="chip" onclick="toggle('${esc(en)}')">${JP[en]||en} ×</button>`;
+  box.innerHTML=h||'<span class="muted">未選択</span>';
+}
+function update(){
+  document.getElementById("output").value=buildTags(currentState()).join(", ");
+  renderChips();
+}
+function render(){
+  const q=document.getElementById("search").value.trim().toLowerCase();
+  const match=x=>!q||x[0].toLowerCase().includes(q)||x[1].toLowerCase().includes(q);
+
+  const styleBox=document.getElementById("styles");const styleScroll=styleBox.scrollLeft;
+  styleBox.innerHTML=DATA["方向性"].filter(match).map(x=>`<button class="style ${selectedStyles.has(x[0])?"on":""}" onclick="toggleStyle('${esc(x[0])}')">${x[0]}</button>`).join("");
+  styleBox.scrollLeft=styleScroll;
+
+  const cats=Object.keys(DATA).filter(c=>c!=="方向性");
+  const menuWrap=document.querySelector("#categories .category-menu-wrap");const menuScroll=menuWrap?menuWrap.scrollLeft:0;
+  const menu=cats.map(cat=>{
+    const n=flat(cat).filter(x=>selected.has(x[1])).length;
+    return `<button class="cat-tab ${openCategory===cat?"on":""}" onclick="toggleCategory('${esc(cat)}')">${cat}${n?`<span class="badge">${n}</span>`:""}</button>`;
+  }).join("");
+  const panels=cats.map(cat=>{
+    return panelHtml(cat,q,match);
+  }).join("");
+  document.getElementById("categories").innerHTML=`<div class="card"><div class="category-menu-wrap"><div class="category-menu">${menu}</div></div>${panels}</div>`;
+  const nm=document.querySelector("#categories .category-menu-wrap");if(nm)nm.scrollLeft=menuScroll;
+
+  let styleHtml="";
+  for(const style of selectedStyles){
+    const arr2=(STYLES[style]||[]).filter(match);
+    styleHtml+=`<div class="style-group"><strong>${style} の要素</strong><div class="grid" style="margin-top:6px">${arr2.map(x=>itemBtn(x[0],x[1])).join("")}</div></div>`;
+  }
+  document.getElementById("styleElements").innerHTML=styleHtml;
+
+  renderPerson(q);
+  renderCreature(q);
+  update();
+  updateSavedCount();
+}
+function clearAll(){
+  selected.clear();selectedStyles.clear();
+  Object.keys(PERSON).forEach(g=>psel[g].clear());
+  characterType=null;openCategory=null;openPerson=null;openCreature=null;
+  render();
+}
+
+/* ---------- saved combinations ---------- */
+function getTpls(){try{return JSON.parse(localStorage.getItem(TPL_KEY)||"{}")||{};}catch(e){return {};}}
+function setTpls(t){try{localStorage.setItem(TPL_KEY,JSON.stringify(t));return true;}catch(e){showToast("保存できませんでした");return false;}}
+function updateSavedCount(){
+  const n=Object.keys(getTpls()).length;const el=document.getElementById("savedCount");
+  el.textContent=n;el.hidden=!n;
+}
+function showView(v){
+  document.getElementById("viewMake").hidden=(v!=="make");
+  document.getElementById("viewSaved").hidden=(v!=="saved");
+  document.getElementById("navMake").classList.toggle("on",v==="make");
+  document.getElementById("navSaved").classList.toggle("on",v==="saved");
+  if(v==="saved")renderSaved();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function saveTemplate(){
+  const input=document.getElementById("tplName");const name=input.value.trim();
+  if(!name){showToast("名前を入れてね");input.focus();return;}
+  const st=currentState();
+  if(!buildTags(st).length){showToast("まだ何も選ばれていないよ");return;}
+  const tpls=getTpls();
+  if(tpls[name]&&!confirm(`「${name}」は保存済みです。上書きしますか？`))return;
+  delete tpls[name];tpls[name]={...st,saved:Date.now()};
+  if(!setTpls(tpls))return;
+  input.value="";updateSavedCount();showToast("保存したよ！⭐");
+}
+function renderSaved(){
+  const tpls=getTpls();
+  tplList=Object.entries(tpls).reverse();
+  const box=document.getElementById("savedList");
+  if(!tplList.length){box.innerHTML='<div class="empty">まだ保存した組み合わせはありません。<br>「つくる」で選んで、下の欄から保存してね。</div>';return;}
+  box.innerHTML=tplList.map(([name,t],i)=>{
+    const labels=tagLabels(t);const shown=labels.slice(0,14);
+    const chips=shown.map(l=>`<span class="chip">${escHtml(l)}</span>`).join("")+(labels.length>shown.length?`<span class="chip">+${labels.length-shown.length}</span>`:"");
+    const date=t.saved?new Date(t.saved).toLocaleDateString("ja-JP"):"";
+    return `<div class="saved-item"><div class="saved-top"><strong>${escHtml(name)}</strong><span class="muted" style="margin:0">${date}</span></div><div class="chips" style="margin:0">${chips||'<span class="muted">（空）</span>'}</div><div class="saved-actions"><button class="mini accent" onclick="loadTemplate(${i})">読み込む</button><button class="mini" onclick="copyTemplate(${i})">コピー</button><button class="mini" onclick="renameTemplate(${i})">名前変更</button><button class="mini" onclick="deleteTemplate(${i})">削除</button></div></div>`;
+  }).join("");
+}
+function loadTemplate(i){
+  const t=tplList[i]&&tplList[i][1];if(!t)return;
+  selectedStyles=new Set((t.styles||[]).filter(n=>DATA["方向性"].some(x=>x[0]===n)));selected=new Set(t.items||[]);
+  characterType=CHARACTER_PROMPTS[t.character]?t.character:null;
+  Object.keys(PERSON).forEach(g=>psel[g]=new Set(validP(g,t.hair&&t.hair[g])));
+  showView("make");render();showToast("読み込んだよ！");
+}
+async function copyTemplate(i){
+  const t=tplList[i]&&tplList[i][1];if(!t)return;
+  showToast(await copyText(buildTags(t).join(", "))?"コピーしたよ！":"コピーできなかった…");
+}
+function renameTemplate(i){
+  const old=tplList[i]&&tplList[i][0];if(!old)return;
+  const nn=(prompt("新しい名前",old)||"").trim();if(!nn||nn===old)return;
+  const tpls=getTpls();
+  if(tpls[nn]&&!confirm(`「${nn}」は保存済みです。上書きしますか？`))return;
+  const t=tpls[old];delete tpls[old];delete tpls[nn];tpls[nn]=t;
+  if(setTpls(tpls)){renderSaved();updateSavedCount();}
+}
+function deleteTemplate(i){
+  const name=tplList[i]&&tplList[i][0];if(!name)return;
+  if(!confirm(`「${name}」を削除しますか？`))return;
+  const tpls=getTpls();delete tpls[name];
+  if(setTpls(tpls)){renderSaved();updateSavedCount();showToast("削除したよ");}
+}
+async function exportTemplates(){
+  const text=JSON.stringify(getTpls());
+  document.getElementById("backup").value=text;
+  showToast(await copyText(text)?"書き出してコピーしたよ！":"書き出したよ（手動でコピーしてね）");
+}
+function importTemplates(){
+  const raw=document.getElementById("backup").value.trim();if(!raw){showToast("テキストを貼り付けてね");return;}
+  let obj;try{obj=JSON.parse(raw);}catch(e){showToast("読み込めない形式です");return;}
+  if(!obj||typeof obj!=="object"||Array.isArray(obj)){showToast("読み込めない形式です");return;}
+  const tpls=getTpls();let n=0;
+  for(const [k,v] of Object.entries(obj)){if(v&&typeof v==="object"){delete tpls[k];tpls[k]=v;n++;}}
+  if(setTpls(tpls)){renderSaved();updateSavedCount();showToast(`${n}件取り込んだよ！`);}
+}
+
+document.getElementById("search").addEventListener("input",render);
+render();
+</script></body></html>
